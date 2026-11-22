@@ -60,13 +60,6 @@
   @keyframes up   { from { transform: translateY(100%); } to { transform: none; } }
   @keyframes down { from { transform: translateY(-100%); } to { transform: none; } }
 
-  /* taskbar view */
-  body[data-view="taskbar"] .dock-wrap { bottom: 0; }
-  body[data-view="taskbar"] .dock { border-radius: 0; width: 100vw; max-width: none; justify-content: flex-start; padding: 7px 14px; gap: 12px; background: var(--chrome); border: 0; backdrop-filter: none; }
-  body[data-view="taskbar"] .app, body[data-view="taskbar"] .slot { --s: 34px; }
-  body[data-view="taskbar"] .clock { display: block; }
-  .clock { display: none; margin-left: auto; align-self: center; color: var(--chrome-fg); font-size: 13px; }
-
   /* overview grid */
   .grid { position: fixed; inset: 40px 0 0 0; background: color-mix(in srgb, var(--chrome) 92%, transparent); backdrop-filter: blur(12px); z-index: 10; overflow: auto; padding: 22px; display: none; touch-action: pan-y; }
   .grid.open { display: block; }
@@ -78,7 +71,6 @@
   .mini svg { display: block; }
 
   .jslots { display: flex; gap: inherit; }
-  body[data-view="taskbar"] .jslots { gap: 12px; }
   .dock .jslots { gap: 10px; }
   .trio { display: flex; gap: 14px; }
   .trio figure { text-align: center; font-size: 12px; color: var(--muted); }
@@ -89,13 +81,13 @@
   .cell .mini svg { width: 64px; height: 64px; margin: 0 0 6px; }
   .cells.wide { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
   /* phone */
-  .phone-wrap { display: none; position: fixed; top: 52px; bottom: 12px; right: 4vw; z-index: 3; align-items: center; flex-direction: column; justify-content: center; gap: 8px; }
+  .phone-wrap { display: none; position: fixed; top: 48px; bottom: 104px; right: 4vw; z-index: 3; align-items: center; flex-direction: column; justify-content: center; gap: 8px; }
   .pcap { font-size: 13px; color: var(--muted); text-align: center; }
   .pcap b { color: var(--text); font-weight: 600; }
   body[data-phone="on"] .phone-wrap { display: flex; }
-  body[data-phone="on"] .stage { padding-right: min(420px, 40vw); padding-bottom: 0; }
-  body[data-phone="on"] .dock-wrap, body[data-phone="on"] .hint { display: none; }
-  .phone { --h: min(700px, calc(100vh - 100px)); height: var(--h); aspect-ratio: 9 / 19.5; border-radius: calc(var(--h) * .075); background: #0d0d0f; padding: calc(var(--h) * .016); box-shadow: 0 20px 60px rgba(0,0,0,.35), inset 0 0 0 2px #2a2a2e; position: relative; font-family: -apple-system, "SF Pro Text", Geist, system-ui, sans-serif; }
+  body[data-phone="on"] .stage { padding-right: min(420px, 40vw); padding-bottom: 110px; }
+  body[data-phone="on"] .hint { display: none; }
+  .phone { --h: min(660px, calc(100vh - 180px)); height: var(--h); aspect-ratio: 9 / 19.5; border-radius: calc(var(--h) * .075); background: #0d0d0f; padding: calc(var(--h) * .016); box-shadow: 0 20px 60px rgba(0,0,0,.35), inset 0 0 0 2px #2a2a2e; position: relative; font-family: -apple-system, "SF Pro Text", Geist, system-ui, sans-serif; }
   .screen { position: relative; width: 100%; height: 100%; border-radius: calc(var(--h) * .062); overflow: hidden; background: var(--pw); color: #fff; display: flex; flex-direction: column; container-type: inline-size; }
   body[data-mode="light"] .screen { --pw: linear-gradient(170deg,#9cc3e6,#c7b6e8 55%,#f3c9b6); }
   body[data-mode="dark"]  .screen { --pw: linear-gradient(170deg,#1d2b45,#2c2346 55%,#3d2a2a); }
@@ -137,7 +129,7 @@
   }
 </style>
 </head>
-<body data-mode="light" data-view="dock" data-phone="off" data-os="ios">
+<body data-mode="light" data-phone="on" data-os="ios">
 
 <div class="tabs">
   <div class="tab on" id="tab"><span id="tabIcon"></span><span>Jukpo — Home</span></div>
@@ -145,9 +137,7 @@
   <div class="tools">
     <button id="btnPrev" title="Previous (↑)">↑</button>
     <button id="btnNext" title="Next (↓)">↓</button>
-    <button id="btnView">Taskbar</button>
-    <button id="btnPhone">Phone</button>
-    <button id="btnOS" hidden>Android</button>
+    <button id="btnOS">Android</button>
     <button id="btnMode">Dark</button>
     <button id="btnAll">All</button>
   </div>
@@ -273,7 +263,7 @@ function buildDock() {
     OTHERS.slice(0, half).map(s => `<div class="app">${gsvg(s)}</div>`).join('') +
     `<div class="jslots" id="jslots"></div>` +
     OTHERS.slice(half).map(s => `<div class="app">${gsvg(s)}</div>`).join('') +
-    `<div class="clock" id="clock"></div>`;
+    '';
 }
 // Every place a Jukpo icon appears holds one slot per icon of the option: one for a
 // single option, three for a leaf-colour set.
@@ -372,32 +362,19 @@ $('btnMode').onclick = () => {
   document.body.dataset.mode = dark ? 'dark' : 'light';
   $('btnMode').textContent = dark ? 'Light' : 'Dark';
 };
-$('btnView').onclick = () => {
-  const bar = document.body.dataset.view === 'dock';
-  document.body.dataset.view = bar ? 'taskbar' : 'dock';
-  $('btnView').textContent = bar ? 'Dock' : 'Taskbar';
-};
-$('btnPhone').onclick = () => {
-  const on = document.body.dataset.phone !== 'on';
-  document.body.dataset.phone = on ? 'on' : 'off';
-  $('btnPhone').textContent = on ? 'Desktop' : 'Phone';
-  $('btnOS').hidden = !on;
-  if (on) { buildPhone(); renderPhone(0); }
-};
 $('btnOS').onclick = () => {
   const android = document.body.dataset.os !== 'android';
   document.body.dataset.os = android ? 'android' : 'ios';
   $('btnOS').textContent = android ? 'iPhone' : 'Android';
   buildPhone(); renderPhone(0);
 };
-const tick = () => { const c = $('clock'); if (c) c.textContent = new Date().toTimeString().slice(0, 5); };
 
 buildDock(); buildGrid();
 $('tabOther').innerHTML = gsvg(BROWSER).replace('<svg ', '<svg width="16" height="16" ');
 const start = parseInt(location.hash.slice(1), 10);
 if (start >= 1 && start <= OPTIONS.length) idx = start - 1;
 if (matchMedia('(prefers-color-scheme: dark)').matches) $('btnMode').click();
-render(0); tick(); setInterval(tick, 30000);
+render(0);
 </script>
 </body>
 </html>
