@@ -49,6 +49,19 @@ white34('Mustard + ochre', '#e2b33a', '#c98a14');
 white34('Deep gold', '#e3ab22', '#b8860b');
 white34('Honey', '#f3bd3d', '#e0a01a');
 
+// #9 taken further: butter + amber leaves on both the black and the white icon, and
+// a soft top-to-bottom gradient behind the ink mark.
+const AMBER = '#f2a93b';
+const grad9 = (name, top, bottom) => OPTIONS.push({ group: '#9 · butter + amber, gradient third icon', name, lock: { l: BUTTER, r: AMBER }, icons: [
+  { bg: '#111111', j: SNOW, l: BUTTER, r: AMBER, label: 'black · butter + amber' },
+  { bg: '#ffffff', j: INK, l: BUTTER, r: AMBER, label: 'white · butter + amber' },
+  { bg: [top, bottom], j: INK, l: INK, r: INK, label: 'ink on gradient' },
+] });
+grad9('Butter gradient', '#fbe38f', '#f3c64a');
+grad9('Butter to amber', '#f9dc7a', '#f2a93b');
+grad9('Butter to honey', '#fbe08a', '#f0b429');
+grad9('Pale butter to butter', '#fdf0bf', BUTTER);
+
 startViewer(OPTIONS, 'Jukpo — refined icons');
 </script>
 </body>

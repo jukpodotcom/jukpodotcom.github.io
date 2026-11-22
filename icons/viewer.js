@@ -38,7 +38,11 @@ function icon(o, px, round) {
   const s = (round ? 60 : 70) / BOX.h; // the mark is 70% of a square's height, 60% of a circle's
   const tx = 50 - (BOX.x + BOX.w / 2) * s, ty = 50 - (BOX.y + BOX.h / 2) * s;
   const size = px ? ` width="${px}" height="${px}"` : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"${size}><rect width="100" height="100" rx="${round ? 50 : 22}" fill="${o.bg}"/><g transform="translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${s.toFixed(4)})">${markBody(o.j, o.l, o.r)}</g></svg>`;
+  // o.bg is a colour, or [top, bottom] for a vertical gradient; the gradient's id is
+  // made from its colours, so identical gradients in one page share one definition.
+  const grad = Array.isArray(o.bg), gid = grad ? 'g' + o.bg.join('').replace(/#/g, '') : '';
+  const defs = grad ? `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${o.bg[0]}"/><stop offset="1" stop-color="${o.bg[1]}"/></linearGradient></defs>` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"${size}>${defs}<rect width="100" height="100" rx="${round ? 50 : 22}" fill="${grad ? `url(#${gid})` : o.bg}"/><g transform="translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${s.toFixed(4)})">${markBody(o.j, o.l, o.r)}</g></svg>`;
 }
 function lockup(j, l, r, bg, fg) {
   return `<div class="lock" style="background:${bg}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="18 8 140 86">${markBody(j, l, r)}<text x="66" y="68" font-family="Geist, system-ui, sans-serif" font-weight="700" font-size="40" letter-spacing="-1" fill="${fg}">ukpo</text></svg></div>`;
@@ -125,7 +129,7 @@ function render(dir) {
     ? `<div class="trio">${o.icons.map(c => `<figure>${icon(c).replace('<svg ', '<svg class="big3" ')}<figcaption>${c.label}</figcaption></figure>`).join('')}</div>`
     : icon(first).replace('<svg ', '<svg class="big" ');
   $('name').textContent = o.name;
-  $('sub').textContent = (o.icons.length > 1) ? o.group : `${o.group} · background ${first.bg}`;
+  $('sub').textContent = (o.icons.length > 1) ? o.group : `${o.group} · background ${[].concat(first.bg).join(' → ')}`;
   $('count').textContent = `${idx + 1} / ${OPTIONS.length}`;
   $('sizes').innerHTML = o.icons.map(c => `<span class="sizeset">${((o.icons.length > 1) ? [32, 16] : [64, 32, 16]).map(px => icon(c, px)).join('')}</span>`).join('');
   const ink = coloured.l === INK;
