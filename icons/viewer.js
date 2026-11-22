@@ -120,7 +120,7 @@ function fillSlots(container, icons, dir, round) {
 }
 function render(dir) {
   const o = OPTIONS[idx], first = o.icons[0];
-  const coloured = o.icons.find(c => c.l !== INK) || first;
+  const coloured = o.lock || o.icons.find(c => c.l !== INK) || first; // o.lock: leaves for the ukpo lockups
   $('big').innerHTML = (o.icons.length > 1)
     ? `<div class="trio">${o.icons.map(c => `<figure>${icon(c).replace('<svg ', '<svg class="big3" ')}<figcaption>${c.label}</figcaption></figure>`).join('')}</div>`
     : icon(first).replace('<svg ', '<svg class="big" ');
