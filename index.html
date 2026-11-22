@@ -37,10 +37,9 @@
     }
     h1.ready { opacity: 1; }
 
-    #toggle {
+    #toggle, #shuffle {
       position: fixed;
       top: 1rem;
-      left: 1rem;
       width: 2.75rem;
       height: 2.75rem;
       border: 1px solid var(--fg);
@@ -52,41 +51,69 @@
       opacity: 0.7;
       transition: opacity 0.2s;
     }
-    #toggle:hover { opacity: 1; }
+    #toggle { left: 1rem; }
+    #shuffle { right: 1rem; }
+    #toggle:hover, #shuffle:hover { opacity: 1; }
   </style>
 </head>
 <body>
   <button id="toggle" aria-label="Toggle dark/light mode"></button>
+  <button id="shuffle" aria-label="Shuffle font" title="Shuffle font">⤮</button>
   <h1 id="title">Jukpo</h1>
 
   <script>
     // --- Random font ---
     const fonts = [
-      'Abril Fatface', 'Alfa Slab One', 'Anton', 'Archivo Black', 'Bangers',
-      'Bebas Neue', 'Bungee', 'Caveat', 'Cinzel', 'Comfortaa', 'Concert One',
-      'Cormorant Garamond', 'Courier Prime', 'DM Serif Display', 'Dancing Script',
-      'Faster One', 'Fredoka', 'Gloria Hallelujah', 'Great Vibes', 'Inter',
-      'Josefin Sans', 'Lobster', 'Monoton', 'Montserrat', 'Nosifer',
-      'Orbitron', 'Pacifico', 'Permanent Marker', 'Playfair Display', 'Press Start 2P',
-      'Righteous', 'Rubik Mono One', 'Russo One', 'Sacramento', 'Shrikhand',
-      'Space Grotesk', 'Space Mono', 'Special Elite', 'Syne', 'UnifrakturMaguntia',
-      'VT323', 'Yeseva One', 'Zilla Slab', 'Black Ops One', 'Creepster',
-      'Fascinate', 'Major Mono Display', 'Rampart One', 'Silkscreen', 'Unbounded'
+      'Abril Fatface', 'Alfa Slab One', 'Bangers', 'Black Ops One', 'Bungee',
+      'Bungee Shade', 'Bungee Spice', 'Caveat', 'Cinzel Decorative', 'Codystar',
+      'Creepster', 'Dancing Script', 'Ewert', 'Fascinate', 'Fascinate Inline',
+      'Faster One', 'Frijole', 'Gloria Hallelujah', 'Great Vibes', 'Honk',
+      'Kablammo', 'Lobster', 'Londrina Sketch', 'Major Mono Display', 'Megrim',
+      'Monoton', 'Nabla', 'Nosifer', 'Orbitron', 'Pacifico',
+      'Permanent Marker', 'Plaster', 'Press Start 2P', 'Rampart One', 'Righteous',
+      'Rubik Beastly', 'Rubik Glitch', 'Rubik Mono One', 'Rubik Puddles', 'Rubik Wet Paint',
+      'Sacramento', 'Shrikhand', 'Silkscreen', 'Special Elite', 'UnifrakturMaguntia',
+      'VT323'
     ];
-    const font = fonts[Math.floor(Math.random() * fonts.length)];
     const title = document.getElementById('title');
+    let current = null;
+    let token = 0;
 
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=' +
-      encodeURIComponent(font).replace(/%20/g, '+') + '&display=block&text=Jukpo';
-    document.head.appendChild(link);
-    title.style.fontFamily = `"${font}", sans-serif`;
-    title.title = font;
+    function loadFont(font) {
+      const id = 'font-' + font.replace(/ /g, '-');
+      if (document.getElementById(id)) return Promise.resolve();
+      return new Promise(resolve => {
+        const link = document.createElement('link');
+        link.id = id;
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=' +
+          font.replace(/ /g, '+') + '&display=block&text=Jukpo';
+        link.onload = link.onerror = resolve;
+        document.head.appendChild(link);
+      });
+    }
 
-    const show = () => title.classList.add('ready');
-    document.fonts.load(`1em "${font}"`, 'Jukpo').then(show, show);
-    setTimeout(show, 1500); // fallback if the font is slow
+    function shuffle() {
+      let font;
+      do { font = fonts[Math.floor(Math.random() * fonts.length)]; } while (font === current);
+      current = font;
+      const my = ++token;
+      title.classList.remove('ready');
+      const show = () => {
+        if (my !== token) return; // a newer shuffle took over
+        title.style.fontFamily = `"${font}", sans-serif`;
+        title.title = font;
+        title.classList.add('ready');
+      };
+      const timeout = new Promise(r => setTimeout(r, 1500)); // fallback if slow
+      Promise.race([
+        loadFont(font).then(() => document.fonts.load(`1em "${font}"`, 'Jukpo')),
+        timeout
+      ]).then(show, show);
+    }
+
+    document.getElementById('shuffle').addEventListener('click', shuffle);
+    shuffle();
 
     // --- Theme toggle ---
     const btn = document.getElementById('toggle');
