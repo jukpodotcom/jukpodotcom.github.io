@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Jukpo — refined icons</title>
+<link rel="icon" id="favicon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/icons/viewer.css">
+</head>
+<body data-mode="light" data-phone="on" data-os="ios">
+<script src="/icons/viewer.js"></script>
+<script>
+// The shortlist from /icons (35, 34, 33, 31, 10, 9, 8), then variations on butter
+// leaves — never yellow on white.
+const OPTIONS = [];
+const one = (group, name, bg, j, l, r) => OPTIONS.push({ group, name, icons: [{ bg, j, l, r }] });
+const BUTTER = '#f6d365', PALE = mix(BUTTER, '#ffffff', .35);
+const trio = (name, l, r, bg) => OPTIONS.push({ group: 'Kept · leaf-colour sets', name, icons: [
+  { bg: '#111111', j: SNOW, l, r, label: 'black' },
+  { bg: '#ffffff', j: INK, l, r, label: 'white' },
+  { bg, j: INK, l: INK, r: INK, label: 'ink on colour' },
+] });
+trio('Leaves · Sage (#35)', mix(SAGE, '#ffffff', .35), SAGE, SAGE);
+trio('Leaves · Butter (#34)', PALE, BUTTER, BUTTER);
+trio('Leaves · Sage + peach (#33)', SAGE, PEACH, PEACH);
+one('Kept · single icons', 'All ink · Cream (#31)', '#f7f0e1', INK, INK, INK);
+one('Kept · single icons', 'Original A · Cream (#10)', '#f7f0e1', INK, SAGE, PEACH);
+one('Kept · single icons', 'Original A · White (#9)', '#ffffff', INK, SAGE, PEACH);
+one('Kept · single icons', 'Original A · Black (#8)', '#0b0b0b', SNOW, SAGE, PEACH);
+
+[ ['Black', '#111111'], ['Charcoal', '#1e1e1e'], ['Navy', '#1b2a3a'], ['Ink blue', '#16223a'], ['Forest', '#1f3d2e'],
+  ['Slate', '#2b3440'], ['Cocoa', '#3a2a22'], ['Plum', '#2d2238'], ['Olive', '#3b3a24'] ]
+  .forEach(([n, c]) => one('Butter leaves · on dark', `Butter leaves · ${n}`, c, SNOW, PALE, BUTTER));
+
+[ ['Pale butter', mix('#fbe7a1', '#ffffff', .3), '#fbe7a1'], ['Butter', PALE, BUTTER], ['Honey', mix('#f2b53c', '#ffffff', .3), '#f2b53c'],
+  ['Gold', mix('#e0a526', '#ffffff', .3), '#e0a526'], ['Mustard', mix('#d6a419', '#ffffff', .25), '#d6a419'],
+  ['Butter + amber', BUTTER, '#f2a93b'], ['Butter + sage', SAGE, BUTTER], ['Butter + peach', BUTTER, PEACH], ['Butter + mint', '#7fdcc0', BUTTER] ]
+  .forEach(([n, l, r]) => one('Butter shades · on black', `Butter shade · ${n}`, '#111111', SNOW, l, r));
+
+[ ['Sage', '#8fc39a', INK], ['Teal', '#2f8f88', SNOW], ['Terracotta', '#c8644a', SNOW], ['Forest green', '#2f6b4a', SNOW], ['Sky', '#6aa8e8', SNOW] ]
+  .forEach(([n, c, j]) => one('Butter leaves · on colour', `Butter leaves · on ${n}`, c, j, PALE, BUTTER));
+
+[ ['Butter', BUTTER], ['Pale butter', '#fbe7a1'], ['Honey', '#f2b53c'], ['Gold', '#e0a526'] ]
+  .forEach(([n, c]) => one('Ink on butter', `All ink · ${n}`, c, INK, INK, INK));
+
+startViewer(OPTIONS, 'Jukpo — refined icons');
+</script>
+</body>
+</html>
