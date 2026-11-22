@@ -46,22 +46,18 @@
 <body>
 <header>
   <h1>Jukpo — wordmark</h1>
-  <p>“ukpo” drawn by hand from the app icon’s j — no font. Same 14 stroke, flat cut ends, round bowls; the j’s flat top is the x-height and its hook sits on the baseline. Each option is shown on paper, on ink and on the Sunrise gradient, then as a site header, beside the Sunrise app icon, and at 32, 20 and 14 px.</p>
+  <p><b>Round 2, from option 4.</b> “ukpo” drawn by hand from the app icon’s j — no font. Same 14 stroke, flat cut ends, round bowls; the j’s flat top is the x-height and its hook sits on the baseline. Each option is shown on paper, on ink and on the Sunrise gradient, then as a site header, beside the Sunrise app icon, and at 32, 20 and 14 px.</p>
 </header>
 <main id="list"></main>
-<script src="/icons/viewer.js?v=636dd86c"></script>
+<script src="/icons/viewer.js?v=1bc28728"></script>
 <script>
 const SUN = ['#fbe38f', '#ff9e7d'];
 const OPTIONS = [
-  { name: 'Drawn', why: 'The base drawing: rounds 44 wide, 9 between letters, k and p reaching about half the x-height past it.' },
-  { o: { rx: 17 }, name: 'Drawn · wider rounds', why: 'Rounder u, p and o: friendlier, closer to the circle of the j’s hook.' },
-  { o: { rx: 13.5 }, name: 'Drawn · narrower rounds', why: 'Tighter, more upright letters; the word gets shorter and stronger.' },
-  { o: { gap: 7 }, name: 'Drawn · tight', why: 'Letters closer together: reads as one shape, the way logos usually are at this weight.' },
-  { o: { gap: 12 }, name: 'Drawn · airy', why: 'More room between letters: calmer, holds up better at very small sizes.' },
-  { o: { asc: 30, desc: 26 }, name: 'Drawn · tall k and p', why: 'Longer ascender and descender: more contrast between the round and straight letters.' },
-  { o: { asc: 15, desc: 13 }, name: 'Drawn · short k and p', why: 'Compact: the word sits in a tight band, good for small headers.' },
-  { o: { rx: 17, gap: 7 }, name: 'Drawn · wide and tight', why: 'Options 2 and 4 together: round letters set close.' },
-  { mono: true, name: 'Drawn · one colour', why: 'Option 1 with ink leaves, for one-colour printing.' },
+  { name: 'Drawn · tight (was 4), reworked', why: 'Narrower k, no spurs on u and p, and p tucked closer to k so the word holds together.' },
+  { o: { kw: 19 }, name: 'Narrower k still', why: 'k’s arm 5 shorter: the k is closer to the width of its stem and arm alone.' },
+  { o: { gap: 5 }, name: 'Tighter', why: 'Two less between every letter: one solid shape.' },
+  { o: { rx: 16.5 }, name: 'Rounder', why: 'Slightly wider u, p and o, closer to the j’s hook.' },
+  { mono: true, name: 'One colour', why: 'Option 1 with ink leaves, for one-colour printing.' },
 ];
 const svgOf = (v, fg, l, r, h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${wordmarkBox(v.o)}"${h ? ` style="height:${h}px"` : ''}>${wordmarkBody(fg, v.mono ? fg : l, v.mono ? fg : r, v.o)}</svg>`;
 document.getElementById('list').innerHTML = OPTIONS.map((v, i) => `<section class="card" id="w${i + 1}">

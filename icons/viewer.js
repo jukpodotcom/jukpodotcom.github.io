@@ -19,30 +19,41 @@ function markBody(j, l, r) {
 // cut ends, and round bowls. The j's flat top (48) is the x-height; the bottom of its
 // hook (91) is a round overshooting the baseline, so the baseline is 89.5 and every
 // round (u, p, o) overshoots it, and the x-height, by the same 1.5.
+// No spurs: u closes into a U like the j's hook, and p's stem grows from the middle
+// of its bowl, so no flat corner sticks out at the x-height or the baseline.
 // Options (all optional) tune the drawing: rx, the rounds' half-width at the centre
-// line; gap, the space between outlines (rounds sit 2 closer); asc and desc, how far
-// k and p reach past the x-height and the baseline.
+// line; gap, the space between outlines; kw, how far k's arm reaches right of its
+// stem; asc and desc, how far k and p reach past the x-height and the baseline.
 const WM = { T: 14, XT: 48, BL: 89.5, OV: 1.5 };
 function wmLayout(o = {}) {
-  const { T, XT, BL, OV } = WM, rx = o.rx ?? 15, gap = o.gap ?? 9, asc = o.asc ?? 22, desc = o.desc ?? 20;
-  const kw = 38 + (rx - 15);                 // k's arms grow with the rounds
+  const { T, XT, BL, OV } = WM, rx = o.rx ?? 15, gap = o.gap ?? 7, asc = o.asc ?? 22, desc = o.desc ?? 20;
+  const kw = o.kw ?? 24, cy = (XT + BL) / 2, ry = (BL - XT) / 2 + OV - T / 2;
   const uL = 61 + gap + T / 2, uR = uL + 2 * rx - 2;
   const k = uR + T / 2 + gap + T / 2;
-  const p = k + kw + 7 + gap - 1 + T / 2;     // 7: the leg's half-width at the baseline
+  // k's arm and leg (stroke 12): the leg's right edge at the baseline sets where p goes.
+  const arm = [k, cy + 9, k + kw, XT - 10];
+  // The leg starts on the arm's centre line, 40% of the way out, so they join cleanly.
+  const lx = k + .4 * kw, ly = arm[1] + .4 * (arm[3] - arm[1]);
+  const leg = [lx, ly, k + kw + 5, BL + 10];
+  const t = (BL - leg[1]) / (leg[3] - leg[1]), dx = leg[2] - leg[0], dy = leg[3] - leg[1];
+  const kRight = leg[0] + t * dx + 6 * Math.hypot(dx, dy) / dy;
+  // The space under k's arm and over its leg already reads as letter space, so p
+  // tucks in by 3; rounds sit 2 closer than straights.
+  const p = kRight + gap - 3 + T / 2;
   const oX = p + 2 * rx + T / 2 + gap - 2 + rx + T / 2;
-  return { T, XT, BL, rx, asc, desc, kw, uL, uR, k, p, oX, cy: (XT + BL) / 2, ry: (BL - XT) / 2 + OV - T / 2, end: oX + rx + T / 2 };
+  return { T, XT, BL, rx, ry, cy, asc, desc, kw, arm, leg, uL, uR, k, p, oX, end: oX + rx + T / 2 };
 }
 function ukpo(fg, o) {
-  const L = wmLayout(o), { T, XT, BL, cy, rx, ry, kw } = L, id = `wmk${++ukpo.n}`;
+  const L = wmLayout(o), { T, XT, BL, cy, rx, ry, arm, leg } = L, id = `wmk${++ukpo.n}`;
   const st = `fill="none" stroke="${fg}" stroke-width="${T}" stroke-linecap="butt"`;
   const ellipse = x => `<ellipse cx="${x}" cy="${cy}" rx="${rx}" ry="${ry}" ${st}/>`;
-  const u = `<path d="M${L.uL} ${XT} V${cy} A${(L.uR - L.uL) / 2} ${ry} 0 0 0 ${L.uR} ${cy} M${L.uR} ${XT} V${BL}" ${st}/>`;
+  const u = `<path d="M${L.uL} ${XT} V${cy} A${(L.uR - L.uL) / 2} ${ry} 0 0 0 ${L.uR} ${cy} V${XT}" ${st}/>`;
   // k's arm and leg are a little lighter (12) so the notch between them stays open,
   // and are cut flat at the x-height and the baseline like every stem.
   const k = `<path d="M${L.k} ${XT - L.asc} V${BL}" ${st}/>` +
-    `<defs><clipPath id="${id}"><rect x="${L.k}" y="${XT}" width="${kw + 30}" height="${BL - XT}"/></clipPath></defs>` +
-    `<path clip-path="url(#${id})" d="M${L.k + 2} ${cy + 7} L${L.k + kw} ${XT - 10} M${L.k + 17} ${cy - 2} L${L.k + kw + 8} ${BL + 10}" fill="none" stroke="${fg}" stroke-width="${T - 2}"/>`;
-  const p = `<path d="M${L.p} ${XT} V${BL + L.desc}" ${st}/>` + ellipse(L.p + rx);
+    `<defs><clipPath id="${id}"><rect x="${L.k}" y="${XT}" width="${L.kw + 30}" height="${BL - XT}"/></clipPath></defs>` +
+    `<path clip-path="url(#${id})" d="M${arm[0]} ${arm[1]} L${arm[2]} ${arm[3]} M${leg[0]} ${leg[1]} L${leg[2]} ${leg[3]}" fill="none" stroke="${fg}" stroke-width="${T - 2}"/>`;
+  const p = `<path d="M${L.p} ${cy} V${BL + L.desc}" ${st}/>` + ellipse(L.p + rx);
   return u + k + p + ellipse(L.oX);
 }
 ukpo.n = 0;
