@@ -46,17 +46,17 @@
 <body>
 <header>
   <h1>Jukpo — wordmark</h1>
-  <p><b>Round 2, from option 4.</b> “ukpo” drawn by hand from the app icon’s j — no font. Same 14 stroke, flat cut ends, round bowls; the j’s flat top is the x-height and its hook sits on the baseline. Each option is shown on paper, on ink and on the Sunrise gradient, then as a site header, beside the Sunrise app icon, and at 32, 20 and 14 px.</p>
+  <p><b>Round 3: wide and tight, optically spaced.</b> “ukpo” drawn by hand from the app icon’s j — no font. Same 14 stroke, flat cut ends, round bowls; the j’s flat top is the x-height and its hook sits on the baseline. Each option is shown on paper, on ink and on the Sunrise gradient, then as a site header, beside the Sunrise app icon, and at 32, 20 and 14 px.</p>
 </header>
 <main id="list"></main>
-<script src="/icons/viewer.js?v=1bc28728"></script>
+<script src="/icons/viewer.js?v=70aa8e2a"></script>
 <script>
 const SUN = ['#fbe38f', '#ff9e7d'];
 const OPTIONS = [
-  { name: 'Drawn · tight (was 4), reworked', why: 'Narrower k, no spurs on u and p, and p tucked closer to k so the word holds together.' },
-  { o: { kw: 19 }, name: 'Narrower k still', why: 'k’s arm 5 shorter: the k is closer to the width of its stem and arm alone.' },
-  { o: { gap: 5 }, name: 'Tighter', why: 'Two less between every letter: one solid shape.' },
-  { o: { rx: 16.5 }, name: 'Rounder', why: 'Slightly wider u, p and o, closer to the j’s hook.' },
+  { name: 'Wide and tight, optically spaced', why: 'Every pair spaced by the area of white between the letters, not by distance: k and p sit closer because the white under k’s arm already counts as space.' },
+  { o: { kLeg: 'stem' }, name: 'k with arm and leg on the stem', why: 'A different k: the leg starts at the stem, so the k is a cleaner wedge and its right side reads more like a straight.' },
+  { o: { kw: 20 }, name: 'Narrower k', why: 'k’s arm 4 shorter, so it is closer to the width of the round letters.' },
+  { o: { gap: 10.5 }, name: 'A touch looser', why: 'The same optical spacing with a little more air; holds up better at 14 px.' },
   { mono: true, name: 'One colour', why: 'Option 1 with ink leaves, for one-colour printing.' },
 ];
 const svgOf = (v, fg, l, r, h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${wordmarkBox(v.o)}"${h ? ` style="height:${h}px"` : ''}>${wordmarkBody(fg, v.mono ? fg : l, v.mono ? fg : r, v.o)}</svg>`;

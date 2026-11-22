@@ -21,46 +21,90 @@ function markBody(j, l, r) {
 // round (u, p, o) overshoots it, and the x-height, by the same 1.5.
 // No spurs: u closes into a U like the j's hook, and p's stem grows from the middle
 // of its bowl, so no flat corner sticks out at the x-height or the baseline.
-// Options (all optional) tune the drawing: rx, the rounds' half-width at the centre
-// line; gap, the space between outlines; kw, how far k's arm reaches right of its
-// stem; asc and desc, how far k and p reach past the x-height and the baseline.
+// Options (all optional): rx, the rounds' half-width at the centre line; kw, how far
+// k's arm reaches right of its stem; kLeg, 'arm' (the leg grows out of the arm) or
+// 'stem' (arm and leg both meet the stem); asc and desc, how far k and p reach past
+// the x-height and the baseline; gap, the space between two straight stems; depth,
+// see the spacing note below.
 const WM = { T: 14, XT: 48, BL: 89.5, OV: 1.5 };
-function wmLayout(o = {}) {
-  const { T, XT, BL, OV } = WM, rx = o.rx ?? 15, gap = o.gap ?? 7, asc = o.asc ?? 22, desc = o.desc ?? 20;
-  const kw = o.kw ?? 24, cy = (XT + BL) / 2, ry = (BL - XT) / 2 + OV - T / 2;
-  const uL = 61 + gap + T / 2, uR = uL + 2 * rx - 2;
-  const k = uR + T / 2 + gap + T / 2;
-  // k's arm and leg (stroke 12): the leg's right edge at the baseline sets where p goes.
-  const arm = [k, cy + 9, k + kw, XT - 10];
-  // The leg starts on the arm's centre line, 40% of the way out, so they join cleanly.
-  const lx = k + .4 * kw, ly = arm[1] + .4 * (arm[3] - arm[1]);
-  const leg = [lx, ly, k + kw + 5, BL + 10];
-  const t = (BL - leg[1]) / (leg[3] - leg[1]), dx = leg[2] - leg[0], dy = leg[3] - leg[1];
-  const kRight = leg[0] + t * dx + 6 * Math.hypot(dx, dy) / dy;
-  // The space under k's arm and over its leg already reads as letter space, so p
-  // tucks in by 3; rounds sit 2 closer than straights.
-  const p = kRight + gap - 3 + T / 2;
-  const oX = p + 2 * rx + T / 2 + gap - 2 + rx + T / 2;
-  return { T, XT, BL, rx, ry, cy, asc, desc, kw, arm, leg, uL, uR, k, p, oX, end: oX + rx + T / 2 };
-}
-function ukpo(fg, o) {
-  const L = wmLayout(o), { T, XT, BL, cy, rx, ry, arm, leg } = L, id = `wmk${++ukpo.n}`;
+const wmOpts = (o = {}) => ({ rx: o.rx ?? 17, kw: o.kw ?? 24, kLeg: o.kLeg ?? 'arm', asc: o.asc ?? 22, desc: o.desc ?? 20, gap: o.gap ?? 9, depth: o.depth ?? 6 });
+
+// Each letter drawn with its stem (or centre) at x = 0, as SVG markup.
+function wmGlyphs(fg, o, id) {
+  const { T, XT, BL, OV } = WM, { rx, kw, kLeg, asc, desc } = wmOpts(o);
+  const cy = (XT + BL) / 2, ry = (BL - XT) / 2 + OV - T / 2;
   const st = `fill="none" stroke="${fg}" stroke-width="${T}" stroke-linecap="butt"`;
   const ellipse = x => `<ellipse cx="${x}" cy="${cy}" rx="${rx}" ry="${ry}" ${st}/>`;
-  const u = `<path d="M${L.uL} ${XT} V${cy} A${(L.uR - L.uL) / 2} ${ry} 0 0 0 ${L.uR} ${cy} V${XT}" ${st}/>`;
-  // k's arm and leg are a little lighter (12) so the notch between them stays open,
-  // and are cut flat at the x-height and the baseline like every stem.
-  const k = `<path d="M${L.k} ${XT - L.asc} V${BL}" ${st}/>` +
-    `<defs><clipPath id="${id}"><rect x="${L.k}" y="${XT}" width="${L.kw + 30}" height="${BL - XT}"/></clipPath></defs>` +
-    `<path clip-path="url(#${id})" d="M${arm[0]} ${arm[1]} L${arm[2]} ${arm[3]} M${leg[0]} ${leg[1]} L${leg[2]} ${leg[3]}" fill="none" stroke="${fg}" stroke-width="${T - 2}"/>`;
-  const p = `<path d="M${L.p} ${cy} V${BL + L.desc}" ${st}/>` + ellipse(L.p + rx);
-  return u + k + p + ellipse(L.oX);
+  const uw = 2 * rx - 2;
+  const arm = [0, cy + 9, kw, XT - 10];
+  // 'arm': the leg starts on the arm's centre line, 40% of the way out, so they join
+  // cleanly; 'stem': the leg starts at the stem, just under the arm.
+  const leg = kLeg === 'stem' ? [4, cy - 2, kw + 2, BL + 10] : [.4 * kw, arm[1] + .4 * (arm[3] - arm[1]), kw + 5, BL + 10];
+  return {
+    u: `<path d="M0 ${XT} V${cy} A${uw / 2} ${ry} 0 0 0 ${uw} ${cy} V${XT}" ${st}/>`,
+    // k's arm and leg are a little lighter (12) so the notch between them stays
+    // open, and are cut flat at the x-height and the baseline like every stem.
+    k: `<path d="M0 ${XT - asc} V${BL}" ${st}/>` +
+       `<defs><clipPath id="${id}"><rect x="0" y="${XT}" width="${kw + 30}" height="${BL - XT}"/></clipPath></defs>` +
+       `<path clip-path="url(#${id})" d="M${arm[0]} ${arm[1]} L${arm[2]} ${arm[3]} M${leg[0]} ${leg[1]} L${leg[2]} ${leg[3]}" fill="none" stroke="${fg}" stroke-width="${T - 2}"/>`,
+    p: `<path d="M0 ${cy} V${BL + desc}" ${st}/>` + ellipse(rx),
+    o: ellipse(0),
+  };
+}
+
+// Optical spacing. Two letters look evenly spaced when the white between them has the
+// same area, counting only the white near their edges (white deep inside a letter's
+// open side, like the notch of k or the bowl of u, reads as part of the letter). This
+// is the area method behind Tracy's spacing and tools like HT Letterspacer:
+// on every row of the x-height, a side's depth is how far its edge sits in from the
+// letter's outermost point, capped at `depth` (6, about 15% of the x-height, as in
+// Letterspacer's usual setting). Two straight stems have depth 0 and sit `gap` apart;
+// any other pair sits `gap` minus its average depth apart, so that the white area is
+// the same. Rounds then land about 60% of a straight's distance apart, Tracy's ratio.
+const wmProfiles = {};
+function wmProfile(o) {
+  const key = JSON.stringify(wmOpts(o));
+  if (wmProfiles[key]) return wmProfiles[key];
+  const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg');
+  svg.style.cssText = 'position:absolute;left:-4000px;top:0;width:10px;height:10px';
+  document.body.appendChild(svg);
+  const sides = name => {
+    svg.innerHTML = name === 'j' ? `<path d="${J_PATH}" fill="none" stroke="#000" stroke-width="14"/>` : wmGlyphs('#000', o, 'measure')[name];
+    const els = [...svg.querySelectorAll('path, ellipse')];
+    const ink = (x, y) => els.some(e => e.isPointInStroke(new DOMPoint(x, y)) && (e.getAttribute('clip-path') ? y >= WM.XT && y <= WM.BL && x >= 0 : true));
+    const left = [], right = [];
+    for (let y = WM.XT + .5; y < WM.BL; y += 1) {
+      let l = null, r = null;
+      for (let x = -70; x <= 110; x += .5) if (ink(x, y)) { if (l === null) l = x; r = x; }
+      left.push(l); right.push(r);
+    }
+    const minL = Math.min(...left.filter(v => v !== null)), maxR = Math.max(...right.filter(v => v !== null));
+    const cap = wmOpts(o).depth, depth = (v, edge) => v === null ? cap : Math.min(cap, Math.abs(v - edge));
+    return { minL, maxR, dL: left.map(v => depth(v, minL)), dR: right.map(v => depth(v, maxR)) };
+  };
+  const prof = Object.fromEntries(['j', 'u', 'k', 'p', 'o'].map(n => [n, sides(n)]));
+  svg.remove();
+  return wmProfiles[key] = prof;
+}
+function wmLayout(o) {
+  const P = wmProfile(o), { gap, asc, desc } = wmOpts(o);
+  const space = (a, b) => gap - P[a].dR.reduce((s, d, i) => s + d + P[b].dL[i], 0) / P[a].dR.length;
+  const x = { j: 0 }, order = ['j', 'u', 'k', 'p', 'o'];
+  for (let i = 1; i < order.length; i++) {
+    const a = order[i - 1], b = order[i];
+    x[b] = x[a] + P[a].maxR + space(a, b) - P[b].minL;
+  }
+  return { x, asc, desc, end: x.o + P.o.maxR };
+}
+function ukpo(fg, o) {
+  const L = wmLayout(o), g = wmGlyphs(fg, o, `wmk${++ukpo.n}`);
+  return ['u', 'k', 'p', 'o'].map(n => `<g transform="translate(${L.x[n].toFixed(2)} 0)">${g[n]}</g>`).join('');
 }
 ukpo.n = 0;
 function wordmarkBody(fg, l, r, o) { return markBody(fg, l, r) + ukpo(fg, o); }
 function wordmarkBox(o) {
-  const L = wmLayout(o), top = Math.min(10, L.XT - L.asc) - 2, bottom = L.BL + Math.max(L.desc, 1.5) + 2;
-  return `16 ${top} ${L.end + 2 - 16} ${bottom - top}`;
+  const L = wmLayout(o), top = Math.min(10, WM.XT - L.asc) - 2, bottom = WM.BL + Math.max(L.desc, 1.5) + 2;
+  return `16 ${top} ${(L.end + 2 - 16).toFixed(2)} ${bottom - top}`;
 }
 
 // Bounding box of the mark in its own units, measured once in the page so the
