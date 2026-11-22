@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jukpo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script>
+    // Apply saved theme before paint to avoid a flash (default: dark)
+    document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark';
+  </script>
+  <style>
+    :root[data-theme="dark"]  { --bg: #0e0e0e; --fg: #f2f2f2; }
+    :root[data-theme="light"] { --bg: #fafafa; --fg: #111111; }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s, color 0.3s;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: clamp(4rem, 18vw, 14rem);
+      font-weight: 400;
+      line-height: 1;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    h1.ready { opacity: 1; }
+
+    #toggle {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      width: 2.75rem;
+      height: 2.75rem;
+      border: 1px solid var(--fg);
+      border-radius: 50%;
+      background: transparent;
+      color: var(--fg);
+      font-size: 1.25rem;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    #toggle:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+  <button id="toggle" aria-label="Toggle dark/light mode"></button>
+  <h1 id="title">Jukpo</h1>
+
+  <script>
+    // --- Random font ---
+    const fonts = [
+      'Abril Fatface', 'Alfa Slab One', 'Anton', 'Archivo Black', 'Bangers',
+      'Bebas Neue', 'Bungee', 'Caveat', 'Cinzel', 'Comfortaa', 'Concert One',
+      'Cormorant Garamond', 'Courier Prime', 'DM Serif Display', 'Dancing Script',
+      'Faster One', 'Fredoka', 'Gloria Hallelujah', 'Great Vibes', 'Inter',
+      'Josefin Sans', 'Lobster', 'Monoton', 'Montserrat', 'Nosifer',
+      'Orbitron', 'Pacifico', 'Permanent Marker', 'Playfair Display', 'Press Start 2P',
+      'Righteous', 'Rubik Mono One', 'Russo One', 'Sacramento', 'Shrikhand',
+      'Space Grotesk', 'Space Mono', 'Special Elite', 'Syne', 'UnifrakturMaguntia',
+      'VT323', 'Yeseva One', 'Zilla Slab', 'Black Ops One', 'Creepster',
+      'Fascinate', 'Major Mono Display', 'Rampart One', 'Silkscreen', 'Unbounded'
+    ];
+    const font = fonts[Math.floor(Math.random() * fonts.length)];
+    const title = document.getElementById('title');
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=' +
+      encodeURIComponent(font).replace(/%20/g, '+') + '&display=block&text=Jukpo';
+    document.head.appendChild(link);
+    title.style.fontFamily = `"${font}", sans-serif`;
+    title.title = font;
+
+    const show = () => title.classList.add('ready');
+    document.fonts.load(`1em "${font}"`, 'Jukpo').then(show, show);
+    setTimeout(show, 1500); // fallback if the font is slow
+
+    // --- Theme toggle ---
+    const btn = document.getElementById('toggle');
+    const root = document.documentElement;
+    const render = () => { btn.textContent = root.dataset.theme === 'dark' ? '☀' : '☾'; };
+    btn.addEventListener('click', () => {
+      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme', root.dataset.theme);
+      render();
+    });
+    render();
+  </script>
+</body>
+</html>
