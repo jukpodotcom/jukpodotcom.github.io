@@ -13,8 +13,8 @@
 <body data-mode="light" data-phone="on" data-os="ios">
 <script src="/icons/viewer.js"></script>
 <script>
-// The shortlist from /icons (35, 34, 33, 31, 10, 9, 8), then variations on butter
-// leaves — never yellow on white.
+// The shortlist from /icons (35, 34, 33, 31, 10, 9, 8), then #34 with different
+// yellows, then more butter-leaf variations (no yellow on white).
 const OPTIONS = [];
 const one = (group, name, bg, j, l, r) => OPTIONS.push({ group, name, icons: [{ bg, j, l, r }] });
 const BUTTER = '#f6d365', PALE = mix(BUTTER, '#ffffff', .35);
@@ -30,6 +30,23 @@ one('Kept · single icons', 'All ink · Cream (#31)', '#f7f0e1', INK, INK, INK);
 one('Kept · single icons', 'Original A · Cream (#10)', '#f7f0e1', INK, SAGE, PEACH);
 one('Kept · single icons', 'Original A · White (#9)', '#ffffff', INK, SAGE, PEACH);
 one('Kept · single icons', 'Original A · Black (#8)', '#0b0b0b', SNOW, SAGE, PEACH);
+
+// #34 again, with different yellows: the same three icons (black, white, ink on
+// colour), each pair a lighter and a deeper yellow so the leaves hold on white.
+const set34 = (name, l, r, bg) => OPTIONS.push({ group: '#34 · yellow variations', name, icons: [
+  { bg: '#111111', j: SNOW, l, r, label: 'black' },
+  { bg: '#ffffff', j: INK, l, r, label: 'white' },
+  { bg, j: INK, l: INK, r: INK, label: 'ink on colour' },
+] });
+set34('Butter + amber', BUTTER, '#f2a93b', BUTTER);
+set34('Butter + amber, amber ground', BUTTER, '#f2a93b', '#f2a93b');
+set34('Honey + amber', '#f6c453', '#ef9f27', '#f6c453');
+set34('Butter + honey', BUTTER, '#f2b53c', BUTTER);
+set34('Gold + amber', '#ebb52f', '#e08a1e', '#ebb52f');
+set34('Pale butter + gold', '#fbe7a1', '#e0a526', BUTTER);
+set34('Saffron + marigold', '#ffc845', '#f59f0a', '#ffc845');
+set34('Mustard + ochre', '#e2b33a', '#c98a14', '#e2b33a');
+set34('Amber + tangerine', '#f7b538', '#f2802a', '#f7b538');
 
 [ ['Black', '#111111'], ['Charcoal', '#1e1e1e'], ['Navy', '#1b2a3a'], ['Ink blue', '#16223a'], ['Forest', '#1f3d2e'],
   ['Slate', '#2b3440'], ['Cocoa', '#3a2a22'], ['Plum', '#2d2238'], ['Olive', '#3b3a24'] ]
