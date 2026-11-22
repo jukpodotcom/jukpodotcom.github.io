@@ -3,131 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
   <title>Jukpo</title>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script>
-    // Apply saved theme before paint to avoid a flash (default: dark)
-    document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark';
-  </script>
   <style>
-    :root[data-theme="dark"]  { --bg: #0e0e0e; --fg: #f2f2f2; }
-    :root[data-theme="light"] { --bg: #fafafa; --fg: #111111; }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    html, body { height: 100%; }
-
+    :root { --bg: #111111; --ink: #ececec; }
+    @media (prefers-color-scheme: light) {
+      :root { --bg: #ffffff; --ink: #1e1e1e; }
+    }
+    html, body { height: 100%; margin: 0; }
     body {
       background: var(--bg);
-      color: var(--fg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.3s, color 0.3s;
-      overflow: hidden;
+      display: grid;
+      place-items: center;
     }
-
-    h1 {
-      font-size: clamp(4rem, 18vw, 14rem);
-      font-weight: 400;
-      line-height: 1;
-      opacity: 0;
-      transition: opacity 0.4s;
-    }
-    h1.ready { opacity: 1; }
-
-    #toggle, #shuffle {
-      position: fixed;
-      top: 1rem;
-      width: 2.75rem;
-      height: 2.75rem;
-      border: 1px solid var(--fg);
-      border-radius: 50%;
-      background: transparent;
-      color: var(--fg);
-      font-size: 1.25rem;
-      cursor: pointer;
-      opacity: 0.7;
-      transition: opacity 0.2s;
-    }
-    #toggle { left: 1rem; }
-    #shuffle { right: 1rem; }
-    #toggle:hover, #shuffle:hover { opacity: 1; }
+    svg { width: min(60vw, 420px); height: auto; }
+    .ink { fill: var(--ink); }
   </style>
 </head>
 <body>
-  <button id="toggle" aria-label="Toggle dark/light mode"></button>
-  <button id="shuffle" aria-label="Shuffle font" title="Shuffle font">⤮</button>
-  <h1 id="title">Jukpo</h1>
-
-  <script>
-    // --- Random font ---
-    const fonts = [
-      'Abril Fatface', 'Alfa Slab One', 'Bangers', 'Black Ops One', 'Bungee',
-      'Bungee Shade', 'Bungee Spice', 'Caveat', 'Cinzel Decorative', 'Codystar',
-      'Creepster', 'Dancing Script', 'Ewert', 'Fascinate', 'Fascinate Inline',
-      'Faster One', 'Frijole', 'Gloria Hallelujah', 'Great Vibes', 'Honk',
-      'Kablammo', 'Lobster', 'Londrina Sketch', 'Major Mono Display', 'Megrim',
-      'Monoton', 'Nabla', 'Nosifer', 'Orbitron', 'Pacifico',
-      'Permanent Marker', 'Plaster', 'Press Start 2P', 'Rampart One', 'Righteous',
-      'Rubik Beastly', 'Rubik Glitch', 'Rubik Mono One', 'Rubik Puddles', 'Rubik Wet Paint',
-      'Sacramento', 'Shrikhand', 'Silkscreen', 'Special Elite', 'UnifrakturMaguntia',
-      'VT323'
-    ];
-    const title = document.getElementById('title');
-    let current = null;
-    let token = 0;
-
-    function loadFont(font) {
-      const id = 'font-' + font.replace(/ /g, '-');
-      if (document.getElementById(id)) return Promise.resolve();
-      return new Promise(resolve => {
-        const link = document.createElement('link');
-        link.id = id;
-        link.rel = 'stylesheet';
-        link.href = 'https://fonts.googleapis.com/css2?family=' +
-          font.replace(/ /g, '+') + '&display=block&text=Jukpo';
-        link.onload = link.onerror = resolve;
-        document.head.appendChild(link);
-      });
-    }
-
-    function shuffle() {
-      let font;
-      do { font = fonts[Math.floor(Math.random() * fonts.length)]; } while (font === current);
-      current = font;
-      const my = ++token;
-      title.classList.remove('ready');
-      const show = () => {
-        if (my !== token) return; // a newer shuffle took over
-        title.style.fontFamily = `"${font}", sans-serif`;
-        title.title = font;
-        title.classList.add('ready');
-      };
-      const timeout = new Promise(r => setTimeout(r, 1500)); // fallback if slow
-      Promise.race([
-        loadFont(font).then(() => document.fonts.load(`1em "${font}"`, 'Jukpo')),
-        timeout
-      ]).then(show, show);
-    }
-
-    document.getElementById('shuffle').addEventListener('click', shuffle);
-    shuffle();
-
-    // --- Theme toggle ---
-    const btn = document.getElementById('toggle');
-    const root = document.documentElement;
-    const render = () => { btn.textContent = root.dataset.theme === 'dark' ? '☀' : '☾'; };
-    btn.addEventListener('click', () => {
-      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('theme', root.dataset.theme);
-      render();
-    });
-    render();
-  </script>
+  <main>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 254 100" role="img" aria-label="Jukpo">
+      <path class="ink" d="M42,37.54 L42,57.54 Q42,68.44 35.95,74.49 Q29.9,80.54 19,80.54 Q6.94,80.54 0.92,70.01 L13.08,63.07 Q15.06,66.54 19,66.54 Q24.1,66.54 26.05,64.59 Q28,62.64 28,57.54 L28,37.54 Z"/>
+      <path fill="#8fc39a" d="M35,35.54 C20.58,29.73 14.2,17.72 19.04,5.52 C31.86,8.33 38.24,20.34 35,35.54 Z"/>
+      <path fill="#ff9e7d" d="M35,33.54 C31.76,18.34 38.14,6.33 50.96,3.52 C55.8,15.72 49.42,27.73 35,33.54 Z"/>
+      <path class="ink" d="M62.65,37.54 L62.65,58.29 Q62.65,61.61 65.17,64.01 Q67.82,66.54 71.65,66.54 Q75.48,66.54 78.13,64.01 Q80.65,61.61 80.65,58.29 L80.65,37.54 L94.65,37.54 L94.65,58.29 Q94.65,67.61 87.79,74.14 Q81.08,80.54 71.65,80.54 Q62.22,80.54 55.51,74.14 Q48.65,67.61 48.65,58.29 L48.65,37.54 Z"/>
+      <path class="ink" d="M116.44,21.54 L116.44,79.04 L102.44,79.04 L102.44,21.54 L116.44,21.54 Z"/>
+      <path class="ink" d="M134.35,79.04 L120.88,64.15 L113.74,71.48 L109.44,67.29 L109.44,58.7 L130.06,37.54 L146.82,37.54 L129.27,55.54 L150.53,79.04 Z"/>
+      <path class="ink" d="M167.41,58.29 L167.41,99.04 L153.41,99.04 L153.41,58.29 L167.41,58.29 Z"/>
+      <path class="ink" d="M201.41,58.29 Q201.41,67.73 194.1,74.28 Q187.13,80.54 177.41,80.54 Q167.69,80.54 160.72,74.28 Q153.41,67.73 153.41,58.29 Q153.41,48.85 160.72,42.3 Q167.69,36.04 177.41,36.04 Q187.13,36.04 194.1,42.3 Q201.41,48.85 201.41,58.29 Z M187.41,58.29 Q187.41,55.1 184.76,52.72 Q181.77,50.04 177.41,50.04 Q173.05,50.04 170.06,52.72 Q167.41,55.1 167.41,58.29 Q167.41,61.48 170.06,63.86 Q173.05,66.54 177.41,66.54 Q181.77,66.54 184.76,63.86 Q187.41,61.48 187.41,58.29 Z"/>
+      <path class="ink" d="M252.98,58.29 Q252.98,67.73 245.68,74.28 Q238.7,80.54 228.98,80.54 Q219.26,80.54 212.28,74.28 Q204.98,67.73 204.98,58.29 Q204.98,48.85 212.28,42.3 Q219.26,36.04 228.98,36.04 Q238.7,36.04 245.68,42.3 Q252.98,48.85 252.98,58.29 Z M238.98,58.29 Q238.98,55.1 236.33,52.72 Q233.34,50.04 228.98,50.04 Q224.62,50.04 221.63,52.72 Q218.98,55.1 218.98,58.29 Q218.98,61.48 221.63,63.86 Q224.62,66.54 228.98,66.54 Q233.34,66.54 236.33,63.86 Q238.98,61.48 238.98,58.29 Z"/>
+    </svg>
+  </main>
 </body>
 </html>
