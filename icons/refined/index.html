@@ -8,13 +8,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/icons/viewer.css?v=70aa8e2a">
+<link rel="stylesheet" href="/icons/viewer.css?v=cfd0068c">
 </head>
 <body data-mode="light" data-phone="on" data-os="ios">
-<script src="/icons/viewer.js?v=70aa8e2a"></script>
+<script src="/icons/viewer.js?v=cfd0068c"></script>
 <script>
-// Round two of the shortlist: the six the owner kept (refined 3, 5, 6, 7, 8 and 18),
-// then a few ideas built on them.
+// The chosen pair first, then the shortlist (round two) and the ideas built on it.
 const OPTIONS = [];
 const BUTTER = '#f6d365', AMBER = '#f2a93b', PALE = mix(BUTTER, '#ffffff', .35);
 const one = (group, name, bg, j, l, r) => OPTIONS.push({ group, name, icons: [{ bg, j, l, r }] });
@@ -24,6 +23,17 @@ const set = (group, name, l, r, third, more = {}) => OPTIONS.push({ group, name,
   { bg: more.white || '#ffffff', j: INK, l, r, label: more.whiteLabel || 'white' },
   { bg: third, j: INK, l: INK, r: INK, label: more.thirdLabel || 'ink on colour' },
 ] });
+
+// Chosen: black and white only, sage + peach leaves. Black is the main icon (stores,
+// avatars, favicon); white is the light-mode icon and carries a faint edge so it
+// keeps its shape on white.
+const CHOSEN = 'Chosen';
+const pair = (name, black, white) => OPTIONS.push({ group: CHOSEN, name, lock: { l: SAGE, r: PEACH }, icons: [
+  { bg: black, j: SNOW, l: SAGE, r: PEACH, label: 'black · main' },
+  { bg: white, j: INK, l: SAGE, r: PEACH, edge: true, label: 'white · light mode' },
+] });
+pair('Black + white', '#111111', '#ffffff');
+pair('Black + white · soft depth', ['#2a2a2a', '#0b0b0b'], ['#ffffff', '#f4efe4']);
 
 const KEPT = 'Kept';
 set(KEPT, 'Sage + peach (was #33)', SAGE, PEACH, PEACH);
@@ -40,7 +50,6 @@ const looks = { blackLabel: 'dark', whiteLabel: 'light', thirdLabel: 'default' }
 set(IDEAS, 'Soft depth everywhere', BUTTER, AMBER, ['#f9dc7a', AMBER], { ...looks, black: ['#2a2a2a', '#0b0b0b'], white: ['#ffffff', '#f4efe4'] });
 set(IDEAS, 'Butter + sage', BUTTER, SAGE, ['#fbe38f', '#f3c64a'], looks);
 set(IDEAS, 'Butter + peach', BUTTER, PEACH, ['#fbe08a', '#ffb07d'], looks);
-set(IDEAS, 'Sunrise', SAGE, PEACH, ['#fbe38f', '#ff9e7d'], looks);
 set(IDEAS, 'Night garden', BUTTER, AMBER, ['#f9dc7a', AMBER], { ...looks, black: ['#1f2d40', '#0e1520'] });
 set(IDEAS, 'Golden j', PALE, BUTTER, ['#f9dc7a', AMBER], { ...looks, blackJ: AMBER });
 one(IDEAS, 'Favicon: black, butter + amber', '#0b0b0b', SNOW, BUTTER, AMBER);

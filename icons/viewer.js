@@ -1,6 +1,6 @@
 // Jukpo icon viewer: the mark, generic neighbour apps, and the desktop/phone
 // mock. A page defines its options and calls startViewer(OPTIONS, title).
-// An option is { group, name, icons: [{ bg, j, l, r, label? }] }; one icon or a set.
+// An option is { group, name, icons: [{ bg, j, l, r, edge?, label? }] }; one icon or a set.
 // ---------- the mark: a bold flat-ended j with two leaves for its dot ----------
 const SAGE = '#8fc39a', PEACH = '#ff9e7d', INK = '#1e1e1e', PAPER = '#f7f7f7', SNOW = '#ececec';
 // The j: stroke 14, flat (butt) top at y 48, a round hook ending at bottom-left; the
@@ -21,32 +21,40 @@ function markBody(j, l, r) {
 // round (u, p, o) overshoots it, and the x-height, by the same 1.5.
 // No spurs: u closes into a U like the j's hook, and p's stem grows from the middle
 // of its bowl, so no flat corner sticks out at the x-height or the baseline.
-// Options (all optional): rx, the rounds' half-width at the centre line; kw, how far
-// k's arm reaches right of its stem; kLeg, 'arm' (the leg grows out of the arm) or
-// 'stem' (arm and leg both meet the stem); asc and desc, how far k and p reach past
-// the x-height and the baseline; gap, the space between two straight stems; depth,
-// see the spacing note below.
+// Options (all optional): rx, the rounds' half-width at the centre line; kArm and
+// kLeg, how far right of k's stem its arm reaches at the x-height and its leg at the
+// baseline (centre lines); kStyle, how the leg joins: 'arm' (it grows out of the
+// arm), 'stem' (arm and leg both meet the stem) or 'curve' (it grows out of the arm
+// and sweeps out to the baseline, like the j's hook turned around); asc and desc, how
+// far k and p reach past the x-height and the baseline; gap, the space between two
+// straight stems; depth, see the spacing note below.
 const WM = { T: 14, XT: 48, BL: 89.5, OV: 1.5 };
-const wmOpts = (o = {}) => ({ rx: o.rx ?? 17, kw: o.kw ?? 24, kLeg: o.kLeg ?? 'arm', asc: o.asc ?? 22, desc: o.desc ?? 20, gap: o.gap ?? 9, depth: o.depth ?? 6 });
+const wmOpts = (o = {}) => ({ rx: o.rx ?? 17, kArm: o.kArm ?? 29, kLeg: o.kLeg ?? 33, kStyle: o.kStyle ?? 'arm',
+  asc: o.asc ?? 22, desc: o.desc ?? 20, gap: o.gap ?? 9, depth: o.depth ?? 4 });
 
 // Each letter drawn with its stem (or centre) at x = 0, as SVG markup.
 function wmGlyphs(fg, o, id) {
-  const { T, XT, BL, OV } = WM, { rx, kw, kLeg, asc, desc } = wmOpts(o);
+  const { T, XT, BL, OV } = WM, { rx, kArm, kLeg, kStyle, asc, desc } = wmOpts(o);
   const cy = (XT + BL) / 2, ry = (BL - XT) / 2 + OV - T / 2;
   const st = `fill="none" stroke="${fg}" stroke-width="${T}" stroke-linecap="butt"`;
   const ellipse = x => `<ellipse cx="${x}" cy="${cy}" rx="${rx}" ry="${ry}" ${st}/>`;
   const uw = 2 * rx - 2;
-  const arm = [0, cy + 9, kw, XT - 10];
-  // 'arm': the leg starts on the arm's centre line, 40% of the way out, so they join
-  // cleanly; 'stem': the leg starts at the stem, just under the arm.
-  const leg = kLeg === 'stem' ? [4, cy - 2, kw + 2, BL + 10] : [.4 * kw, arm[1] + .4 * (arm[3] - arm[1]), kw + 5, BL + 10];
+  // A line from a to b, run on past b by `over` in y, so the clip cuts it flat.
+  const past = (a, b, over) => { const f = 1 + over / Math.abs(b[1] - a[1]); return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]; };
+  const armFrom = [0, kStyle === 'stem' ? cy + 5 : cy + 9], armTo = past(armFrom, [kArm, XT], 10);
+  // The leg starts on the arm's centre line 40% of the way to the x-height, or for
+  // 'stem' at the stem just under the arm; it ends kLeg out on the baseline.
+  const on = .4, legFrom = kStyle === 'stem' ? [3, cy - 3] : [armFrom[0] + on * (kArm - armFrom[0]), armFrom[1] + on * (XT - armFrom[1])];
+  const leg = kStyle === 'curve'
+    ? `M${legFrom[0]} ${legFrom[1]} Q${legFrom[0] + 4} ${BL - 6} ${kLeg + 8} ${BL + 6}`
+    : (([x, y]) => `M${legFrom[0]} ${legFrom[1]} L${x} ${y}`)(past(legFrom, [kLeg, BL], 10));
   return {
     u: `<path d="M0 ${XT} V${cy} A${uw / 2} ${ry} 0 0 0 ${uw} ${cy} V${XT}" ${st}/>`,
     // k's arm and leg are a little lighter (12) so the notch between them stays
     // open, and are cut flat at the x-height and the baseline like every stem.
     k: `<path d="M0 ${XT - asc} V${BL}" ${st}/>` +
-       `<defs><clipPath id="${id}"><rect x="0" y="${XT}" width="${kw + 30}" height="${BL - XT}"/></clipPath></defs>` +
-       `<path clip-path="url(#${id})" d="M${arm[0]} ${arm[1]} L${arm[2]} ${arm[3]} M${leg[0]} ${leg[1]} L${leg[2]} ${leg[3]}" fill="none" stroke="${fg}" stroke-width="${T - 2}"/>`,
+       `<defs><clipPath id="${id}"><rect x="0" y="${XT}" width="${Math.max(kArm, kLeg) + 30}" height="${BL - XT}"/></clipPath></defs>` +
+       `<path clip-path="url(#${id})" d="M${armFrom[0]} ${armFrom[1]} L${armTo[0]} ${armTo[1]} ${leg}" fill="none" stroke="${fg}" stroke-width="${T - 2}"/>`,
     p: `<path d="M0 ${cy} V${BL + desc}" ${st}/>` + ellipse(rx),
     o: ellipse(0),
   };
@@ -57,10 +65,11 @@ function wmGlyphs(fg, o, id) {
 // open side, like the notch of k or the bowl of u, reads as part of the letter). This
 // is the area method behind Tracy's spacing and tools like HT Letterspacer:
 // on every row of the x-height, a side's depth is how far its edge sits in from the
-// letter's outermost point, capped at `depth` (6, about 15% of the x-height, as in
-// Letterspacer's usual setting). Two straight stems have depth 0 and sit `gap` apart;
-// any other pair sits `gap` minus its average depth apart, so that the white area is
-// the same. Rounds then land about 60% of a straight's distance apart, Tracy's ratio.
+// letter's outermost point, capped at `depth` (4, about 10% of the x-height). Two
+// straight stems have depth 0 and sit `gap` apart; any other pair sits `gap` minus its
+// average depth apart, so that the white area is the same. With this cap rounds land
+// about half a straight's distance apart (Tracy's ratio), and a diagonal like k's
+// right side keeps about half too, instead of letting the next letter crowd it.
 const wmProfiles = {};
 function wmProfile(o) {
   const key = JSON.stringify(wmOpts(o));
@@ -140,8 +149,10 @@ function icon(o, px, round) {
   // its own id: Chrome resolves url(#id) to the first element with that id in the
   // page, and draws nothing if that one sits in a hidden part (the closed grid).
   const grad = Array.isArray(o.bg), gid = grad ? `g${++icon.n}` : '';
+  // o.edge: a faint inner hairline, so a white icon keeps its shape on a white page.
+  const edge = o.edge ? `<rect x=".6" y=".6" width="98.8" height="98.8" rx="${round ? 49.4 : 21.4}" fill="none" stroke="rgba(0,0,0,.14)" stroke-width="1.2"/>` : '';
   const defs = grad ? `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${o.bg[0]}"/><stop offset="1" stop-color="${o.bg[1]}"/></linearGradient></defs>` : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"${size}>${defs}<rect width="100" height="100" rx="${round ? 50 : 22}" fill="${grad ? `url(#${gid})` : o.bg}"/><g transform="translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${s.toFixed(4)})">${markBody(o.j, o.l, o.r)}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"${size}>${defs}<rect width="100" height="100" rx="${round ? 50 : 22}" fill="${grad ? `url(#${gid})` : o.bg}"/>${edge}<g transform="translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${s.toFixed(4)})">${markBody(o.j, o.l, o.r)}</g></svg>`;
 }
 icon.n = 0;
 function lockup(j, l, r, bg, fg) {
@@ -237,7 +248,7 @@ function render(dir) {
                            lockup(SNOW, ink ? SNOW : coloured.l, ink ? SNOW : coloured.r, INK, SNOW);
   fillSlots($('jslots'), o.icons, dir, false);
   $('tabIcon').innerHTML = icon(first, 16);
-  $('favicon').href = 'data:image/svg+xml,' + encodeURIComponent(icon(first));
+  $('favicon').href = 'data:image/svg+xml,' + encodeURIComponent(icon(first, 32));
   document.querySelectorAll('.cell').forEach((c, i) => c.classList.toggle('on', i === idx));
   if (document.body.dataset.phone === 'on') { buildPhone(); renderPhone(dir); }
   $('pcap').innerHTML = `<b>${o.name}</b> · ${idx + 1} / ${OPTIONS.length} · swipe to change`;
