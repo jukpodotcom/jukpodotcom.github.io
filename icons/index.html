@@ -76,7 +76,45 @@
   .cell:hover, .cell.on { background: color-mix(in srgb, var(--chrome-fg) 10%, transparent); }
   .cell svg { width: 72px; height: 72px; display: block; margin: 0 auto 6px; }
 
+  /* phone */
+  .phone-wrap { display: none; position: fixed; top: 52px; bottom: 12px; right: 4vw; z-index: 3; align-items: center; flex-direction: column; justify-content: center; gap: 8px; }
+  .pcap { font-size: 13px; color: var(--muted); text-align: center; }
+  .pcap b { color: var(--text); font-weight: 600; }
+  body[data-phone="on"] .phone-wrap { display: flex; }
+  body[data-phone="on"] .stage { padding-right: min(420px, 40vw); padding-bottom: 0; }
+  body[data-phone="on"] .dock-wrap, body[data-phone="on"] .hint { display: none; }
+  .phone { --h: min(700px, calc(100vh - 100px)); height: var(--h); aspect-ratio: 9 / 19.5; border-radius: calc(var(--h) * .075); background: #0d0d0f; padding: calc(var(--h) * .016); box-shadow: 0 20px 60px rgba(0,0,0,.35), inset 0 0 0 2px #2a2a2e; position: relative; font-family: -apple-system, "SF Pro Text", Geist, system-ui, sans-serif; }
+  .screen { position: relative; width: 100%; height: 100%; border-radius: calc(var(--h) * .062); overflow: hidden; background: var(--pw); color: #fff; display: flex; flex-direction: column; container-type: inline-size; }
+  body[data-mode="light"] .screen { --pw: linear-gradient(170deg,#9cc3e6,#c7b6e8 55%,#f3c9b6); }
+  body[data-mode="dark"]  .screen { --pw: linear-gradient(170deg,#1d2b45,#2c2346 55%,#3d2a2a); }
+  .status { height: 9cqw; padding: 0 7cqw; display: flex; align-items: center; justify-content: space-between; font-size: 4.2cqw; font-weight: 600; margin-top: 2.5cqw; position: relative; }
+  .island { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 30cqw; height: 8.5cqw; background: #000; border-radius: 6cqw; }
+  .punch { position: absolute; left: 50%; top: 1.5cqw; transform: translateX(-50%); width: 5cqw; height: 5cqw; background: #000; border-radius: 50%; }
+  .sicons { display: flex; gap: 1.4cqw; align-items: center; }
+  .sicons svg { height: 3.4cqw; width: auto; fill: currentColor; }
+  .home { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); align-content: start; gap: 5cqw 0; padding: 7cqw 4cqw 0; }
+  .papp { display: flex; flex-direction: column; align-items: center; gap: 1.6cqw; font-size: 3.1cqw; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+  .papp svg { width: 15cqw; height: 15cqw; display: block; filter: drop-shadow(0 1px 3px rgba(0,0,0,.25)); }
+  .pslot { width: 15cqw; height: 15cqw; position: relative; overflow: hidden; border-radius: 22%; }
+  body[data-os="android"] .pslot { border-radius: 50%; }
+  .pslot > div { position: absolute; inset: 0; }
+  .pdock { margin: 0 3.5cqw 3.5cqw; padding: 3.5cqw 3cqw; border-radius: 8cqw; background: rgba(255,255,255,.22); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: grid; grid-template-columns: repeat(4, 1fr); justify-items: center; }
+  .pdock svg { width: 15cqw; height: 15cqw; display: block; }
+  .search { margin: 0 5cqw 4cqw; height: 12cqw; border-radius: 6cqw; background: rgba(255,255,255,.9); display: flex; align-items: center; gap: 3cqw; padding: 0 4cqw; color: #555; font-size: 3.6cqw; }
+  .search b { font-size: 5.5cqw; background: conic-gradient(#ea4335 0 25%, #fbbc05 0 50%, #34a853 0 75%, #4285f4 0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .search .mic { margin-left: auto; width: 2.6cqw; height: 4.4cqw; border-radius: 2cqw; background: #4285f4; }
+  .bar { height: 1.3cqw; width: 34cqw; background: rgba(255,255,255,.85); border-radius: 1cqw; margin: 0 auto 2.4cqw; }
+  .pdots { display: flex; justify-content: center; gap: 1.6cqw; margin-bottom: 3cqw; }
+  .pdots i { width: 1.6cqw; height: 1.6cqw; border-radius: 50%; background: rgba(255,255,255,.5); }
+  .pdots i:first-child { background: #fff; }
+
   @media (max-width: 640px) {
+    body[data-phone="on"] .stage { display: none; }
+    .tools { gap: 4px; }
+    .tools button { padding: 5px 7px; font-size: 11px; }
+    .tab.on > span:last-child { display: none; }
+    .phone-wrap { left: 0; right: 0; justify-content: center; }
+
     .card { grid-template-columns: 1fr; text-align: center; padding: 18px; }
     .sizes { justify-content: center; }
     .lockups { justify-content: center; }
@@ -87,7 +125,7 @@
   }
 </style>
 </head>
-<body data-mode="light" data-view="dock">
+<body data-mode="light" data-view="dock" data-phone="off" data-os="ios">
 
 <div class="tabs">
   <div class="tab on" id="tab"><span id="tabIcon"></span><span>Jukpo — Home</span></div>
@@ -96,6 +134,8 @@
     <button id="btnPrev" title="Previous (↑)">↑</button>
     <button id="btnNext" title="Next (↓)">↓</button>
     <button id="btnView">Taskbar</button>
+    <button id="btnPhone">Phone</button>
+    <button id="btnOS" hidden>Android</button>
     <button id="btnMode">Dark</button>
     <button id="btnAll">All</button>
   </div>
@@ -115,6 +155,7 @@
 </main>
 <div class="hint">Swipe up or down, scroll, or use ↑ ↓ to switch the Jukpo icon · “All” to jump</div>
 
+<div class="phone-wrap" id="phoneWrap"><div class="pcap" id="pcap"></div><div class="phone" id="phone"></div></div>
 <div class="dock-wrap"><div class="dock" id="dock"></div></div>
 <div class="grid" id="grid"></div>
 
@@ -152,11 +193,11 @@ const BOX = (() => {
   svg.remove();
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 })();
-function icon(o, px) {
-  const s = 70 / BOX.h; // the mark is 70% of the square's height
+function icon(o, px, round) {
+  const s = (round ? 60 : 70) / BOX.h; // the mark is 70% of a square's height, 60% of a circle's
   const tx = 50 - (BOX.x + BOX.w / 2) * s, ty = 50 - (BOX.y + BOX.h / 2) * s;
   const size = px ? ` width="${px}" height="${px}"` : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"${size}><rect width="100" height="100" rx="22" fill="${o.bg}"/><g transform="translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${s.toFixed(4)})">${markBody(o.j, o.l, o.r)}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"${size}><rect width="100" height="100" rx="${round ? 50 : 22}" fill="${o.bg}"/><g transform="translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${s.toFixed(4)})">${markBody(o.j, o.l, o.r)}</g></svg>`;
 }
 function lockup(j, l, r, bg, fg) {
   return `<div class="lock" style="background:${bg}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="18 8 140 86">${markBody(j, l, r)}<text x="66" y="68" font-family="Geist, system-ui, sans-serif" font-weight="700" font-size="40" letter-spacing="-1" fill="${fg}">ukpo</text></svg></div>`;
@@ -176,7 +217,8 @@ add('Original A · colour leaves', 'Original A · light', PAPER, INK, SAGE, PEAC
   .forEach(([n, c]) => add('All ink on colour', `All ink · ${n}`, c, INK, INK, INK));
 
 // ---------- generic neighbour icons ----------
-const G = (bg, inner) => `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${bg}"/>${inner}</svg>`;
+const G = (bg, inner) => ({ bg, inner });
+const gsvg = (g, rx = 22) => `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="${rx}" fill="${g.bg}"/>${g.inner}</svg>`;
 const OTHERS = [
   G('#3b82f6', '<circle cx="50" cy="50" r="25" fill="none" stroke="#fff" stroke-width="11"/>'),
   G('#2d2d2d', '<text x="50" y="62" text-anchor="middle" font-family="ui-monospace,monospace" font-weight="700" font-size="34" fill="#7ee787">&gt;_</text>'),
@@ -186,6 +228,15 @@ const OTHERS = [
   G('#ef4444', '<rect x="24" y="30" width="52" height="40" rx="6" fill="#fff"/><path d="M28 34l22 18 22-18" stroke="#ef4444" stroke-width="5" fill="none"/>'),
   G('#f3f4f6', '<rect x="24" y="26" width="52" height="50" rx="7" fill="#fff" stroke="#ddd"/><rect x="24" y="26" width="52" height="14" rx="7" fill="#ef4444"/><text x="50" y="68" text-anchor="middle" font-family="system-ui" font-weight="700" font-size="24" fill="#222">22</text>'),
 ];
+const [BROWSER, TERMINAL, FILES, NOTES, MUSIC, MAIL, CALENDAR] = OTHERS;
+const PHOTOS = G('#ffffff', [['#f59e0b',0],['#ef4444',60],['#a855f7',120],['#3b82f6',180],['#10b981',240],['#84cc16',300]].map(([c,a]) => `<ellipse cx="50" cy="33" rx="9" ry="17" fill="${c}" opacity=".85" transform="rotate(${a} 50 50)"/>`).join(''));
+const CAMERA = G('#6b7280', '<rect x="20" y="34" width="60" height="40" rx="8" fill="#e5e7eb"/><rect x="38" y="27" width="24" height="10" rx="3" fill="#e5e7eb"/><circle cx="50" cy="54" r="12" fill="#374151"/><circle cx="50" cy="54" r="6" fill="#9ca3af"/>');
+const MAPS = G('#e7f3e1', '<path d="M0 62 L100 38" stroke="#fbbf24" stroke-width="9"/><path d="M38 0 L58 100" stroke="#fff" stroke-width="9"/><circle cx="60" cy="40" r="10" fill="#ef4444"/><circle cx="60" cy="40" r="4" fill="#fff"/>');
+const WEATHER = G('#38bdf8', '<circle cx="42" cy="42" r="14" fill="#fde047"/><rect x="34" y="50" width="44" height="20" rx="10" fill="#fff"/><circle cx="50" cy="52" r="12" fill="#fff"/>');
+const CLOCK = G('#111111', '<circle cx="50" cy="50" r="30" fill="#fff"/><path d="M50 50V30M50 50l14 8" stroke="#111" stroke-width="5" stroke-linecap="round"/>');
+const SETTINGS = G('#9ca3af', '<circle cx="50" cy="50" r="24" fill="none" stroke="#f3f4f6" stroke-width="10" stroke-dasharray="9 6"/><circle cx="50" cy="50" r="12" fill="none" stroke="#f3f4f6" stroke-width="7"/>');
+const MESSAGES = G('#22c55e', '<ellipse cx="50" cy="48" rx="27" ry="21" fill="#fff"/><path d="M32 62 L28 74 L42 66Z" fill="#fff"/>');
+const PHONE = G('#22c55e', '<path d="M36 26c4 0 7 10 6 13s-6 4-5 7c3 7 8 12 15 15 3 1 4-4 7-5s13 2 13 6-6 11-12 11C46 73 27 54 27 37c0-6 5-11 9-11z" fill="#fff"/>');
 
 // ---------- state + rendering ----------
 let idx = 0;
@@ -194,9 +245,9 @@ function buildDock() {
   const dock = $('dock');
   const half = Math.floor(OTHERS.length / 2);
   dock.innerHTML =
-    OTHERS.slice(0, half).map(s => `<div class="app">${s}</div>`).join('') +
+    OTHERS.slice(0, half).map(s => `<div class="app">${gsvg(s)}</div>`).join('') +
     `<div class="slot" id="slot"><div class="app jukpo" id="jukpoApp"></div></div>` +
-    OTHERS.slice(half).map(s => `<div class="app">${s}</div>`).join('') +
+    OTHERS.slice(half).map(s => `<div class="app">${gsvg(s)}</div>`).join('') +
     `<div class="clock" id="clock"></div>`;
 }
 function render(dir) {
@@ -215,7 +266,34 @@ function render(dir) {
   $('tabIcon').innerHTML = icon(o, 16);
   $('favicon').href = 'data:image/svg+xml,' + encodeURIComponent(icon(o));
   document.querySelectorAll('.cell').forEach((c, i) => c.classList.toggle('on', i === idx));
+  renderPhone(dir);
+  $('pcap').innerHTML = `<b>${o.name}</b> · ${idx + 1} / ${OPTIONS.length} · swipe to change`;
   history.replaceState(null, '', '#' + (idx + 1));
+}
+const SIG = '<svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>';
+const WIFI = '<svg viewBox="0 0 16 12"><path d="M8 12 5.6 9.2a3.4 3.4 0 0 1 4.8 0zM8 4.2a8.6 8.6 0 0 1 6 2.4l-1.7 1.9a6 6 0 0 0-8.6 0L2 6.6A8.6 8.6 0 0 1 8 4.2zM8 0c3.4 0 6.4 1.3 8 3.2l-1.6 1.9A10 10 0 0 0 8 2.6a10 10 0 0 0-6.4 2.5L0 3.2C1.6 1.3 4.6 0 8 0z"/></svg>';
+const BATT = '<svg viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3" fill="none" stroke="currentColor"/><rect x="2" y="2" width="17" height="8" rx="1.6"/><rect x="23.5" y="4" width="2" height="4" rx="1"/></svg>';
+function buildPhone() {
+  const android = document.body.dataset.os === 'android', rx = android ? 50 : 22;
+  const a = (g, label) => `<div class="papp">${gsvg(g, rx)}<span>${label}</span></div>`;
+  const grid = [a(MAIL, 'Mail'), a(CALENDAR, 'Calendar'), a(PHOTOS, 'Photos'), a(CAMERA, 'Camera'),
+    a(MAPS, 'Maps'), `<div class="papp"><div class="pslot"><div id="phoneJukpo"></div></div><span>Jukpo</span></div>`, a(WEATHER, 'Weather'), a(CLOCK, 'Clock'),
+    a(NOTES, 'Notes'), a(MUSIC, 'Music'), a(FILES, 'Files'), a(SETTINGS, 'Settings')].join('');
+  const time = new Date().toTimeString().slice(0, 5);
+  $('phone').innerHTML = `<div class="screen">
+    <div class="status">${android ? '<div class="punch"></div>' : '<div class="island"></div>'}<span>${time}</span><span class="sicons">${SIG}${WIFI}${BATT}</span></div>
+    <div class="home">${grid}</div>
+    <div class="pdots"><i></i><i></i></div>
+    ${android
+      ? `<div class="pdock" style="background:transparent;backdrop-filter:none">${[PHONE, MESSAGES, BROWSER, CAMERA].map(g => gsvg(g, 50)).join('')}</div><div class="search"><b>G</b><span>Search</span><span class="mic"></span></div>`
+      : `<div class="pdock">${[PHONE, BROWSER, MESSAGES, MUSIC].map(g => gsvg(g, 22)).join('')}</div>`}
+    <div class="bar"></div></div>`;
+}
+function renderPhone(dir) {
+  const el = $('phoneJukpo'); if (!el) return;
+  el.innerHTML = icon(OPTIONS[idx], 0, document.body.dataset.os === 'android');
+  el.classList.remove('anim-up', 'anim-down'); void el.offsetWidth;
+  if (dir) el.classList.add(dir > 0 ? 'anim-up' : 'anim-down');
 }
 function go(d) { idx = (idx + d + OPTIONS.length) % OPTIONS.length; render(d); }
 function buildGrid() {
@@ -261,10 +339,23 @@ $('btnView').onclick = () => {
   document.body.dataset.view = bar ? 'taskbar' : 'dock';
   $('btnView').textContent = bar ? 'Dock' : 'Taskbar';
 };
+$('btnPhone').onclick = () => {
+  const on = document.body.dataset.phone !== 'on';
+  document.body.dataset.phone = on ? 'on' : 'off';
+  $('btnPhone').textContent = on ? 'Desktop' : 'Phone';
+  $('btnOS').hidden = !on;
+  if (on) { buildPhone(); renderPhone(0); }
+};
+$('btnOS').onclick = () => {
+  const android = document.body.dataset.os !== 'android';
+  document.body.dataset.os = android ? 'android' : 'ios';
+  $('btnOS').textContent = android ? 'iPhone' : 'Android';
+  buildPhone(); renderPhone(0);
+};
 const tick = () => { const c = $('clock'); if (c) c.textContent = new Date().toTimeString().slice(0, 5); };
 
 buildDock(); buildGrid();
-$('tabOther').innerHTML = OTHERS[0].replace('<svg ', '<svg width="16" height="16" ');
+$('tabOther').innerHTML = gsvg(BROWSER).replace('<svg ', '<svg width="16" height="16" ');
 const start = parseInt(location.hash.slice(1), 10);
 if (start >= 1 && start <= OPTIONS.length) idx = start - 1;
 if (matchMedia('(prefers-color-scheme: dark)').matches) $('btnMode').click();
