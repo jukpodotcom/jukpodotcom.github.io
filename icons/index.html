@@ -75,7 +75,19 @@
   .cell { text-align: center; color: var(--chrome-fg); font-size: 12px; cursor: pointer; border-radius: 12px; padding: 8px 4px; }
   .cell:hover, .cell.on { background: color-mix(in srgb, var(--chrome-fg) 10%, transparent); }
   .cell svg { width: 72px; height: 72px; display: block; margin: 0 auto 6px; }
+  .mini svg { display: block; }
 
+  .jslots { display: flex; gap: inherit; }
+  body[data-view="taskbar"] .jslots { gap: 12px; }
+  .dock .jslots { gap: 10px; }
+  .trio { display: flex; gap: 14px; }
+  .trio figure { text-align: center; font-size: 12px; color: var(--muted); }
+  .trio figcaption { margin-top: 6px; }
+  .big3 { width: clamp(84px, 15vw, 132px); height: clamp(84px, 15vw, 132px); filter: drop-shadow(0 6px 14px rgba(0,0,0,.22)); display: block; }
+  .sizeset { display: inline-flex; align-items: end; gap: 8px; margin-right: 10px; }
+  .mini { display: flex; justify-content: center; gap: 4px; }
+  .cell .mini svg { width: 64px; height: 64px; margin: 0 0 6px; }
+  .cells.wide { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
   /* phone */
   .phone-wrap { display: none; position: fixed; top: 52px; bottom: 12px; right: 4vw; z-index: 3; align-items: center; flex-direction: column; justify-content: center; gap: 8px; }
   .pcap { font-size: 13px; color: var(--muted); text-align: center; }
@@ -118,8 +130,8 @@
     .card { grid-template-columns: 1fr; text-align: center; padding: 18px; }
     .sizes { justify-content: center; }
     .lockups { justify-content: center; }
-    .app, .slot { --s: 38px; }
-    .dock { gap: 7px; padding: 7px 8px 9px; }
+    .app, .slot { --s: 30px; }
+    .dock, .dock .jslots { gap: 6px; } .dock { padding: 7px 8px 9px; }
     .hint { bottom: 92px; }
     .tab:not(.on) { display: none; }
   }
@@ -205,7 +217,7 @@ function lockup(j, l, r, bg, fg) {
 
 // ---------- every option ----------
 const OPTIONS = [];
-const add = (group, name, bg, j, l, r) => OPTIONS.push({ group, name, bg, j, l, r });
+const add = (group, name, bg, j, l, r) => OPTIONS.push({ group, name, icons: [{ bg, j, l, r }] });
 add('Original A · colour leaves', 'Original A · dark', INK, SNOW, SAGE, PEACH);
 add('Original A · colour leaves', 'Original A · light', PAPER, INK, SAGE, PEACH);
 [ ['Navy', '#1b2a3a'], ['Forest', '#1f3d2e'], ['Plum', '#2d2238'], ['Cocoa', '#3a2a22'], ['Slate', '#2b3440'], ['Black', '#0b0b0b'] ]
@@ -215,6 +227,20 @@ add('Original A · colour leaves', 'Original A · light', PAPER, INK, SAGE, PEAC
 [ ['Sage', '#8fc39a'], ['Peach', '#ff9e7d'], ['Butter', '#f6d365'], ['Mint', '#7fdcc0'], ['Sky', '#8ec5ff'], ['Lilac', '#c8b6ff'], ['Blush', '#ffb3c7'], ['Apricot', '#ffbe76'],
   ['Lime', '#c7e86b'], ['Sand', '#e8d5b5'], ['Stone', '#c9c9c4'], ['Terracotta', '#e07a5f'], ['Teal', '#3fb8af'], ['Moss', '#a3b18a'], ['Cream', '#f7f0e1'], ['White', '#ffffff'] ]
   .forEach(([n, c]) => add('All ink on colour', `All ink · ${n}`, c, INK, INK, INK));
+
+// Leaf-colour sets: for each colour, the same three icons side by side in every view:
+// black with coloured leaves, white with coloured leaves, and all ink on that colour.
+const mix = (hex, to, t) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 - t) + parseInt(to.slice(i, i + 2), 16) * t).toString(16).padStart(2, '0')).join('');
+[ ['Sage + peach', SAGE, PEACH], ['Butter', '#f6d365'], ['Sage', '#8fc39a'], ['Peach', '#ff9e7d'], ['Mint', '#7fdcc0'], ['Sky', '#8ec5ff'],
+  ['Lilac', '#c8b6ff'], ['Blush', '#ffb3c7'], ['Apricot', '#ffbe76'], ['Lime', '#c7e86b'], ['Terracotta', '#e07a5f'], ['Teal', '#3fb8af'] ]
+  .forEach(([n, c, c2]) => {
+    const l = c2 ? c : mix(c, '#ffffff', .35), r = c2 || c, bg = c2 ? PEACH : c;
+    OPTIONS.push({ group: 'Leaf colours · black, white, and ink on colour', name: `Leaves · ${n}`, trio: true, icons: [
+      { bg: '#111111', j: SNOW, l, r, label: 'black' },
+      { bg: '#ffffff', j: INK, l, r, label: 'white' },
+      { bg, j: INK, l: INK, r: INK, label: 'ink on colour' },
+    ] });
+  });
 
 // ---------- generic neighbour icons ----------
 const G = (bg, inner) => ({ bg, inner });
@@ -242,31 +268,40 @@ const PHONE = G('#22c55e', '<path d="M36 26c4 0 7 10 6 13s-6 4-5 7c3 7 8 12 15 1
 let idx = 0;
 const $ = (id) => document.getElementById(id);
 function buildDock() {
-  const dock = $('dock');
   const half = Math.floor(OTHERS.length / 2);
-  dock.innerHTML =
+  $('dock').innerHTML =
     OTHERS.slice(0, half).map(s => `<div class="app">${gsvg(s)}</div>`).join('') +
-    `<div class="slot" id="slot"><div class="app jukpo" id="jukpoApp"></div></div>` +
+    `<div class="jslots" id="jslots"></div>` +
     OTHERS.slice(half).map(s => `<div class="app">${gsvg(s)}</div>`).join('') +
     `<div class="clock" id="clock"></div>`;
 }
+// Every place a Jukpo icon appears holds one slot per icon of the option: one for a
+// single option, three for a leaf-colour set.
+function fillSlots(container, icons, dir, round) {
+  container.innerHTML = icons.map(() => `<div class="slot"><div class="app jukpo"></div></div>`).join('');
+  [...container.querySelectorAll('.app.jukpo')].forEach((el, i) => {
+    el.innerHTML = icon(icons[i], 0, round);
+    if (dir) el.classList.add(dir > 0 ? 'anim-up' : 'anim-down');
+  });
+}
 function render(dir) {
-  const o = OPTIONS[idx];
-  $('big').innerHTML = icon(o).replace('<svg ', '<svg class="big" ');
+  const o = OPTIONS[idx], first = o.icons[0];
+  const coloured = o.icons.find(c => c.l !== INK) || first;
+  $('big').innerHTML = o.trio
+    ? `<div class="trio">${o.icons.map(c => `<figure>${icon(c).replace('<svg ', '<svg class="big3" ')}<figcaption>${c.label}</figcaption></figure>`).join('')}</div>`
+    : icon(first).replace('<svg ', '<svg class="big" ');
   $('name').textContent = o.name;
-  $('sub').textContent = `${o.group} · background ${o.bg}`;
+  $('sub').textContent = o.trio ? o.group : `${o.group} · background ${first.bg}`;
   $('count').textContent = `${idx + 1} / ${OPTIONS.length}`;
-  $('sizes').innerHTML = [64, 32, 16].map(px => icon(o, px)).join('');
-  $('lockups').innerHTML = lockup(INK, o.l === INK ? INK : o.l, o.r === INK ? INK : o.r, PAPER, INK) +
-                           lockup(SNOW, o.l === INK ? SNOW : o.l, o.r === INK ? SNOW : o.r, INK, SNOW);
-  const app = $('jukpoApp');
-  app.innerHTML = icon(o);
-  app.classList.remove('anim-up', 'anim-down'); void app.offsetWidth;
-  if (dir) app.classList.add(dir > 0 ? 'anim-up' : 'anim-down');
-  $('tabIcon').innerHTML = icon(o, 16);
-  $('favicon').href = 'data:image/svg+xml,' + encodeURIComponent(icon(o));
+  $('sizes').innerHTML = o.icons.map(c => `<span class="sizeset">${(o.trio ? [32, 16] : [64, 32, 16]).map(px => icon(c, px)).join('')}</span>`).join('');
+  const ink = coloured.l === INK;
+  $('lockups').innerHTML = lockup(INK, ink ? INK : coloured.l, ink ? INK : coloured.r, PAPER, INK) +
+                           lockup(SNOW, ink ? SNOW : coloured.l, ink ? SNOW : coloured.r, INK, SNOW);
+  fillSlots($('jslots'), o.icons, dir, false);
+  $('tabIcon').innerHTML = icon(first, 16);
+  $('favicon').href = 'data:image/svg+xml,' + encodeURIComponent(icon(first));
   document.querySelectorAll('.cell').forEach((c, i) => c.classList.toggle('on', i === idx));
-  renderPhone(dir);
+  if (document.body.dataset.phone === 'on') { buildPhone(); renderPhone(dir); }
   $('pcap').innerHTML = `<b>${o.name}</b> · ${idx + 1} / ${OPTIONS.length} · swipe to change`;
   history.replaceState(null, '', '#' + (idx + 1));
 }
@@ -276,9 +311,11 @@ const BATT = '<svg viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11
 function buildPhone() {
   const android = document.body.dataset.os === 'android', rx = android ? 50 : 22;
   const a = (g, label) => `<div class="papp">${gsvg(g, rx)}<span>${label}</span></div>`;
+  const n = OPTIONS[idx].icons.length;
+  const jk = Array.from({ length: n }, (_, i) => `<div class="papp"><div class="pslot"><div class="phoneJukpo" data-i="${i}"></div></div><span>Jukpo</span></div>`);
+  const fill = [a(MAPS, 'Maps'), a(WEATHER, 'Weather'), a(CLOCK, 'Clock')].slice(0, 4 - n);
   const grid = [a(MAIL, 'Mail'), a(CALENDAR, 'Calendar'), a(PHOTOS, 'Photos'), a(CAMERA, 'Camera'),
-    a(MAPS, 'Maps'), `<div class="papp"><div class="pslot"><div id="phoneJukpo"></div></div><span>Jukpo</span></div>`, a(WEATHER, 'Weather'), a(CLOCK, 'Clock'),
-    a(NOTES, 'Notes'), a(MUSIC, 'Music'), a(FILES, 'Files'), a(SETTINGS, 'Settings')].join('');
+    ...jk, ...fill, a(NOTES, 'Notes'), a(MUSIC, 'Music'), a(FILES, 'Files'), a(SETTINGS, 'Settings')].join('');
   const time = new Date().toTimeString().slice(0, 5);
   $('phone').innerHTML = `<div class="screen">
     <div class="status">${android ? '<div class="punch"></div>' : '<div class="island"></div>'}<span>${time}</span><span class="sicons">${SIG}${WIFI}${BATT}</span></div>
@@ -290,17 +327,18 @@ function buildPhone() {
     <div class="bar"></div></div>`;
 }
 function renderPhone(dir) {
-  const el = $('phoneJukpo'); if (!el) return;
-  el.innerHTML = icon(OPTIONS[idx], 0, document.body.dataset.os === 'android');
-  el.classList.remove('anim-up', 'anim-down'); void el.offsetWidth;
-  if (dir) el.classList.add(dir > 0 ? 'anim-up' : 'anim-down');
+  const icons = OPTIONS[idx].icons, round = document.body.dataset.os === 'android';
+  document.querySelectorAll('.phoneJukpo').forEach(el => {
+    el.innerHTML = icon(icons[+el.dataset.i], 0, round);
+    if (dir) el.classList.add(dir > 0 ? 'anim-up' : 'anim-down');
+  });
 }
 function go(d) { idx = (idx + d + OPTIONS.length) % OPTIONS.length; render(d); }
 function buildGrid() {
   const groups = [...new Set(OPTIONS.map(o => o.group))];
   $('grid').innerHTML = groups.map(g =>
-    `<h2>${g}</h2><div class="cells">` +
-    OPTIONS.map((o, i) => o.group === g ? `<div class="cell" data-i="${i}">${icon(o)}<div>${o.name.split(' · ').pop()}</div></div>` : '').join('') +
+    `<h2>${g}</h2><div class="cells${OPTIONS.find(o => o.group === g).trio ? ' wide' : ''}">` +
+    OPTIONS.map((o, i) => o.group === g ? `<div class="cell" data-i="${i}"><div class="mini">${o.icons.map(c => icon(c)).join('')}</div><div>${o.name.split(' · ').pop()}</div></div>` : '').join('') +
     `</div>`).join('');
   $('grid').addEventListener('click', e => {
     const c = e.target.closest('.cell'); if (!c) return;
