@@ -13,54 +13,37 @@
 <body data-mode="light" data-phone="on" data-os="ios">
 <script src="/icons/viewer.js?v=60e6d7be"></script>
 <script>
-// The shortlist from /icons (35, 34, 33, 31, 10, 9, 8), then #34 with only the
-// white icon's leaf colours varied.
+// Round two of the shortlist: the six the owner kept (refined 3, 5, 6, 7, 8 and 18),
+// then a few ideas built on them.
 const OPTIONS = [];
+const BUTTER = '#f6d365', AMBER = '#f2a93b', PALE = mix(BUTTER, '#ffffff', .35);
 const one = (group, name, bg, j, l, r) => OPTIONS.push({ group, name, icons: [{ bg, j, l, r }] });
-const BUTTER = '#f6d365', PALE = mix(BUTTER, '#ffffff', .35);
-const trio = (name, l, r, bg) => OPTIONS.push({ group: 'Kept · leaf-colour sets', name, icons: [
-  { bg: '#111111', j: SNOW, l, r, label: 'black' },
-  { bg: '#ffffff', j: INK, l, r, label: 'white' },
-  { bg, j: INK, l: INK, r: INK, label: 'ink on colour' },
+// A set is three icons: black, white, and the ink mark on a colour (flat or [top, bottom]).
+const set = (group, name, l, r, third, more = {}) => OPTIONS.push({ group, name, lock: { l, r }, icons: [
+  { bg: more.black || '#111111', j: more.blackJ || SNOW, l, r, label: more.blackLabel || 'black' },
+  { bg: more.white || '#ffffff', j: INK, l, r, label: more.whiteLabel || 'white' },
+  { bg: third, j: INK, l: INK, r: INK, label: more.thirdLabel || 'ink on colour' },
 ] });
-trio('Leaves · Sage (#35)', mix(SAGE, '#ffffff', .35), SAGE, SAGE);
-trio('Leaves · Butter (#34)', PALE, BUTTER, BUTTER);
-trio('Leaves · Sage + peach (#33)', SAGE, PEACH, PEACH);
-one('Kept · single icons', 'All ink · Cream (#31)', '#f7f0e1', INK, INK, INK);
-one('Kept · single icons', 'Original A · Cream (#10)', '#f7f0e1', INK, SAGE, PEACH);
-one('Kept · single icons', 'Original A · White (#9)', '#ffffff', INK, SAGE, PEACH);
-one('Kept · single icons', 'Original A · Black (#8)', '#0b0b0b', SNOW, SAGE, PEACH);
 
-// #34 as it is, three times over: the black icon and the ink-on-butter icon stay
-// exactly as #34 has them; only the leaves of the white icon change, so butter can
-// hold on white.
-const white34 = (name, l, r) => OPTIONS.push({ group: '#34 · leaf colours on the white icon', name, lock: { l, r }, icons: [
-  { bg: '#111111', j: SNOW, l: PALE, r: BUTTER, label: 'black (as #34)' },
-  { bg: '#ffffff', j: INK, l, r, label: `white · ${name.toLowerCase()}` },
-  { bg: BUTTER, j: INK, l: INK, r: INK, label: 'ink on butter (as #34)' },
-] });
-white34('Butter (as #34)', PALE, BUTTER);
-white34('Butter + amber', BUTTER, '#f2a93b');
-white34('Honey + amber', '#f6c453', '#ef9f27');
-white34('Gold + amber', '#ebb52f', '#e08a1e');
-white34('Saffron + marigold', '#ffc845', '#f59f0a');
-white34('Amber + tangerine', '#f7b538', '#f2802a');
-white34('Mustard + ochre', '#e2b33a', '#c98a14');
-white34('Deep gold', '#e3ab22', '#b8860b');
-white34('Honey', '#f3bd3d', '#e0a01a');
+const KEPT = 'Kept';
+set(KEPT, 'Sage + peach (was #33)', SAGE, PEACH, PEACH);
+one(KEPT, 'Original A · Cream (was #10)', '#f7f0e1', INK, SAGE, PEACH);
+one(KEPT, 'Original A · White (was #9)', '#ffffff', INK, SAGE, PEACH);
+one(KEPT, 'Original A · Black (was #8)', '#0b0b0b', SNOW, SAGE, PEACH);
+set(KEPT, 'Butter, as #34', PALE, BUTTER, BUTTER);
+set(KEPT, 'Butter + amber, butter-to-amber gradient', BUTTER, AMBER, ['#f9dc7a', AMBER], { thirdLabel: 'ink on gradient' });
 
-// #9 taken further: butter + amber leaves on both the black and the white icon, and
-// a soft top-to-bottom gradient behind the ink mark.
-const AMBER = '#f2a93b';
-const grad9 = (name, top, bottom) => OPTIONS.push({ group: '#9 · butter + amber, gradient third icon', name, lock: { l: BUTTER, r: AMBER }, icons: [
-  { bg: '#111111', j: SNOW, l: BUTTER, r: AMBER, label: 'black · butter + amber' },
-  { bg: '#ffffff', j: INK, l: BUTTER, r: AMBER, label: 'white · butter + amber' },
-  { bg: [top, bottom], j: INK, l: INK, r: INK, label: 'ink on gradient' },
-] });
-grad9('Butter gradient', '#fbe38f', '#f3c64a');
-grad9('Butter to amber', '#f9dc7a', '#f2a93b');
-grad9('Butter to honey', '#fbe08a', '#f0b429');
-grad9('Pale butter to butter', '#fdf0bf', BUTTER);
+const IDEAS = 'Ideas';
+// iOS and Android now ship an app in three looks: light, dark, and tinted. The set
+// above is exactly that, so each idea is shown as the three appearances.
+const looks = { blackLabel: 'dark', whiteLabel: 'light', thirdLabel: 'default' };
+set(IDEAS, 'Soft depth everywhere', BUTTER, AMBER, ['#f9dc7a', AMBER], { ...looks, black: ['#2a2a2a', '#0b0b0b'], white: ['#ffffff', '#f4efe4'] });
+set(IDEAS, 'Butter + sage', BUTTER, SAGE, ['#fbe38f', '#f3c64a'], looks);
+set(IDEAS, 'Butter + peach', BUTTER, PEACH, ['#fbe08a', '#ffb07d'], looks);
+set(IDEAS, 'Sunrise', SAGE, PEACH, ['#fbe38f', '#ff9e7d'], looks);
+set(IDEAS, 'Night garden', BUTTER, AMBER, ['#f9dc7a', AMBER], { ...looks, black: ['#1f2d40', '#0e1520'] });
+set(IDEAS, 'Golden j', PALE, BUTTER, ['#f9dc7a', AMBER], { ...looks, blackJ: AMBER });
+one(IDEAS, 'Favicon: black, butter + amber', '#0b0b0b', SNOW, BUTTER, AMBER);
 
 startViewer(OPTIONS, 'Jukpo — refined icons');
 </script>
