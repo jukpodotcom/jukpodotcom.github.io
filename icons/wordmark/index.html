@@ -7,7 +7,7 @@
 <link rel="icon" id="favicon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; font-family: Geist, system-ui, sans-serif; background: #eef0f3; color: #1e1e1e; }
@@ -46,120 +46,39 @@
 <body>
 <header>
   <h1>Jukpo — wordmark</h1>
-  <p>Each option is shown on paper, on ink and on the Sunrise gradient, then as a site header, beside the Sunrise app icon, and at small sizes (32, 20, 14 px). The old lockup (1) set a heavy icon j next to much thinner text; every new option matches the j to the letters' weight.</p>
+  <p>“ukpo” drawn by hand from the app icon’s j — no font. Same 14 stroke, flat cut ends, round bowls; the j’s flat top is the x-height and its hook sits on the baseline. Each option is shown on paper, on ink and on the Sunrise gradient, then as a site header, beside the Sunrise app icon, and at 32, 20 and 14 px.</p>
 </header>
 <main id="list"></main>
-<script src="/icons/viewer.js?v=60e6d7be"></script>
+<script src="/icons/viewer.js?v=636dd86c"></script>
 <script>
-// Sunrise, the chosen icon set.
 const SUN = ['#fbe38f', '#ff9e7d'];
-const SUNRISE = [
-  { bg: '#111111', j: SNOW, l: SAGE, r: PEACH },
-  { bg: '#ffffff', j: INK, l: SAGE, r: PEACH },
-  { bg: SUN, j: INK, l: INK, r: INK },
-];
-const S = 100; // font size the wordmark is built at; tiles scale it
-
-// Geist's own metrics for a weight, measured from the rendered font so every
-// weight Google serves lines up: the dotless j's stem, its top, the advance.
-const metrics = {};
-function measure(w) {
-  if (metrics[w]) return metrics[w];
-  const px = 400, c = document.createElement('canvas'); c.width = 1200; c.height = 900;
-  const g = c.getContext('2d', { willReadFrequently: true });
-  g.font = `${w} ${px}px Geist`; g.fillStyle = '#000';
-  const base = 600, x0 = 300;
-  g.fillText('\u0237', x0, base);
-  const row = y => g.getImageData(0, y, c.width, 1).data;
-  const mid = row(base - Math.round(px * .2));
-  let L = -1, R = -1;
-  for (let x = 0; x < c.width; x++) if (mid[x * 4 + 3] > 128) { if (L < 0) L = x; R = x; }
-  const cx = Math.round((L + R) / 2);
-  let top = base - Math.round(px * .2);
-  while (top > 0 && g.getImageData(cx, top - 1, 1, 1).data[3] > 128) top--;
-  const m = {
-    stemL: (L - x0) / px * S, stemR: (R + 1 - x0) / px * S,
-    top: (base - top) / px * S,
-    adv: g.measureText('\u0237').width / px * S,
-    desc: g.measureText('p').actualBoundingBoxDescent / px * S,
-  };
-  m.stem = m.stemR - m.stemL; m.cx = (m.stemL + m.stemR) / 2;
-  return metrics[w] = m;
-}
-
-// The leaves of the mark, as a tittle on a j whose stem is `stem` wide with its top at
-// (cx, top). k scales the mark (stroke 14) to the stem; ls scales the leaves; gap
-// lifts them off the stem like the dot of an i.
-function tittle(cx, top, stem, l, r, ls = 1, gap = 0) {
-  const k = stem / 14;
-  return `<g transform="translate(${cx.toFixed(2)} ${(top - gap * S).toFixed(2)}) scale(${k.toFixed(4)})">` +
-    leaf(0, 2, -118, 34 * ls, 10 * Math.sqrt(ls), l) + leaf(0, 0, -62, 34 * ls, 10 * Math.sqrt(ls), r) + '</g>';
-}
-
-// A wordmark option → SVG markup (viewBox fitted later, once it is in the page).
-function wordmark(v, fg, l, r) {
-  if (v.old) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 8 140 86">${markBody(fg, l, r)}<text x="66" y="68" font-family="Geist" font-weight="700" font-size="40" letter-spacing="-1" fill="${fg}">ukpo</text></svg>`;
-  const m = measure(v.w), ls = (v.track || 0) * S;
-  const text = (x, s) => `<text x="${x.toFixed(2)}" y="0" font-family="Geist" font-weight="${v.w}" font-size="${S}" letter-spacing="${ls}" fill="${fg}">${s}</text>`;
-  let body;
-  if (v.kind === 'type') {
-    // Geist's own dotless j, with the leaves for its dot.
-    body = text(0, '\u0237ukpo') + tittle(m.cx, -m.top, m.stem, l, r, v.leaf, v.gap);
-  } else {
-    // The icon's j — flat top, round hook — drawn at the letters' stem weight:
-    // top at x-height, hook ending at the descender of p.
-    const sw = m.stem, k = sw / 14, cx = m.cx, top = -m.top, hs = m.desc - 23 * k;
-    const j = `<path d="M${cx} ${top} V${hs} Q${cx} ${hs + 16 * k} ${cx - 16 * k} ${hs + 16 * k} Q${cx - 24 * k} ${hs + 16 * k} ${cx - 28 * k} ${hs + 9 * k}" fill="none" stroke="${fg}" stroke-width="${sw}" stroke-linecap="butt"/>`;
-    body = j + text(m.adv + ls, 'ukpo') + tittle(cx, top, sw, l, r, v.leaf, v.gap);
-  }
-  return `<svg xmlns="http://www.w3.org/2000/svg" data-fit="1">${body}</svg>`;
-}
-
 const OPTIONS = [
-  { old: true, name: 'Current', why: 'For reference: the icon’s heavy j beside 700-weight “ukpo”; the j is about twice as thick as the letters and sits low.' },
-  { kind: 'type', w: 700, name: 'Typeset · Bold', why: 'Geist’s own j with the leaves for its dot. One weight, one rhythm; the leaves carry the brand.' },
-  { kind: 'type', w: 600, name: 'Typeset · SemiBold', why: 'A little lighter and friendlier; the leaves read slightly larger against the thinner letters.' },
-  { kind: 'type', w: 800, name: 'Typeset · ExtraBold', why: 'Heavier, closer to the weight of the app icon’s j.' },
-  { kind: 'type', w: 700, leaf: 1.45, name: 'Typeset · Bold, bigger leaves', why: 'The sprout is the brand; this makes it the first thing you see.' },
-  { kind: 'type', w: 700, gap: .05, name: 'Typeset · Bold, floating leaves', why: 'The leaves sit apart from the stem like the dot of an i — more typographic, less illustration.' },
-  { kind: 'type', w: 500, track: -.01, name: 'Typeset · Medium', why: 'Light and calm; reads as product UI more than logo.' },
-  { kind: 'custom', w: 700, name: 'Icon j · Bold', why: 'The app icon’s flat-topped j with its rounder hook, redrawn at the letters’ weight, so wordmark and icon share one j.' },
-  { kind: 'custom', w: 800, track: -.015, name: 'Icon j · ExtraBold, tight', why: 'Heavier and tighter: the most logo-like of the set.' },
-  { kind: 'custom', w: 900, track: -.02, name: 'Icon j · Black', why: 'Maximum weight; strong at small sizes, loud at large ones.' },
-  { kind: 'custom', w: 700, leaf: 1.45, name: 'Icon j · Bold, bigger leaves', why: 'Option 8 with the sprout grown: the leaves still read at 20 px, where the smaller ones fade to a dot.' },
-  { kind: 'custom', w: 800, leaf: 1.3, track: -.015, name: 'Icon j · ExtraBold, bigger leaves', why: 'Options 9 and 11 together: heavy, tight, and the leaves hold at small sizes.' },
-  { kind: 'type', w: 700, mono: true, name: 'Typeset · Bold, one colour', why: 'Option 2 with ink leaves, for places that allow one colour (stamps, embossing, fax-grade print).' },
+  { name: 'Drawn', why: 'The base drawing: rounds 44 wide, 9 between letters, k and p reaching about half the x-height past it.' },
+  { o: { rx: 17 }, name: 'Drawn · wider rounds', why: 'Rounder u, p and o: friendlier, closer to the circle of the j’s hook.' },
+  { o: { rx: 13.5 }, name: 'Drawn · narrower rounds', why: 'Tighter, more upright letters; the word gets shorter and stronger.' },
+  { o: { gap: 7 }, name: 'Drawn · tight', why: 'Letters closer together: reads as one shape, the way logos usually are at this weight.' },
+  { o: { gap: 12 }, name: 'Drawn · airy', why: 'More room between letters: calmer, holds up better at very small sizes.' },
+  { o: { asc: 30, desc: 26 }, name: 'Drawn · tall k and p', why: 'Longer ascender and descender: more contrast between the round and straight letters.' },
+  { o: { asc: 15, desc: 13 }, name: 'Drawn · short k and p', why: 'Compact: the word sits in a tight band, good for small headers.' },
+  { o: { rx: 17, gap: 7 }, name: 'Drawn · wide and tight', why: 'Options 2 and 4 together: round letters set close.' },
+  { mono: true, name: 'Drawn · one colour', why: 'Option 1 with ink leaves, for one-colour printing.' },
 ];
-
-function render() {
-  const list = document.getElementById('list');
-  list.innerHTML = OPTIONS.map((v, i) => {
-    const wm = (fg, l, r) => wordmark(v, fg, v.mono ? fg : l, v.mono ? fg : r);
-    const sun = `background:linear-gradient(${SUN[0]}, ${SUN[1]})`;
-    return `<section class="card" id="w${i + 1}">
-      <h2><b>${i + 1}</b>${v.name}</h2><p class="why">${v.why}</p>
-      <div class="row">
-        <div class="tile" style="background:#f7f7f7">${wm(INK, SAGE, PEACH)}</div>
-        <div class="tile" style="background:#1a1a1a">${wm(SNOW, SAGE, PEACH)}</div>
-        <div class="tile" style="${sun}">${wm(INK, INK, INK)}</div>
-      </div>
-      <div class="ctx">
-        <div class="site">${wm(INK, SAGE, PEACH)}<nav><span>Features</span><span>Pricing</span><span>Get Jukpo</span></nav></div>
-        <div class="app"><div class="ic">${icon(SUNRISE[2])}</div><div class="wm">${wm(SNOW, SAGE, PEACH)}</div></div>
-        <div class="small">${[32, 20, 14].map(h => wm(INK, SAGE, PEACH).replace('<svg ', `<svg style="height:${h}px" `)).join('')}</div>
-      </div>
-    </section>`;
-  }).join('');
-  // Fit every SVG's viewBox to what it draws.
-  for (const svg of document.querySelectorAll('svg[data-fit]')) {
-    const b = svg.getBBox(), p = 2;
-    svg.setAttribute('viewBox', `${(b.x - p).toFixed(1)} ${(b.y - p).toFixed(1)} ${(b.width + 2 * p).toFixed(1)} ${(b.height + 2 * p).toFixed(1)}`);
-  }
-  document.getElementById('favicon').href = 'data:image/svg+xml,' + encodeURIComponent(icon(SUNRISE[2]));
-  if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
-}
-
-Promise.all([500, 600, 700, 800, 900].map(w => document.fonts.load(`${w} 100px Geist`, '\u0237ukpo'))).then(render);
+const svgOf = (v, fg, l, r, h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${wordmarkBox(v.o)}"${h ? ` style="height:${h}px"` : ''}>${wordmarkBody(fg, v.mono ? fg : l, v.mono ? fg : r, v.o)}</svg>`;
+document.getElementById('list').innerHTML = OPTIONS.map((v, i) => `<section class="card" id="w${i + 1}">
+  <h2><b>${i + 1}</b>${v.name}</h2><p class="why">${v.why}</p>
+  <div class="row">
+    <div class="tile" style="background:#f7f7f7">${svgOf(v, INK, SAGE, PEACH)}</div>
+    <div class="tile" style="background:#1a1a1a">${svgOf(v, SNOW, SAGE, PEACH)}</div>
+    <div class="tile" style="background:linear-gradient(${SUN[0]}, ${SUN[1]})">${svgOf(v, INK, INK, INK)}</div>
+  </div>
+  <div class="ctx">
+    <div class="site">${svgOf(v, INK, SAGE, PEACH)}<nav><span>Features</span><span>Pricing</span><span>Get Jukpo</span></nav></div>
+    <div class="app"><div class="ic">${icon({ bg: SUN, j: INK, l: INK, r: INK })}</div><div class="wm">${svgOf(v, SNOW, SAGE, PEACH)}</div></div>
+    <div class="small">${[32, 20, 14].map(h => svgOf(v, INK, SAGE, PEACH, h)).join('')}</div>
+  </div>
+</section>`).join('');
+document.getElementById('favicon').href = 'data:image/svg+xml,' + encodeURIComponent(icon({ bg: SUN, j: INK, l: INK, r: INK }, 32));
+if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
 </script>
 </body>
 </html>

@@ -1,8 +1,10 @@
 // Jukpo icon viewer: the mark, generic neighbour apps, and the desktop/phone
 // mock. A page defines its options and calls startViewer(OPTIONS, title).
 // An option is { group, name, icons: [{ bg, j, l, r, label? }] }; one icon or a set.
-// ---------- the mark (shape A: bold flat-ended j, tall-V leaves) ----------
+// ---------- the mark: a bold flat-ended j with two leaves for its dot ----------
 const SAGE = '#8fc39a', PEACH = '#ff9e7d', INK = '#1e1e1e', PAPER = '#f7f7f7', SNOW = '#ececec';
+// The j: stroke 14, flat (butt) top at y 48, a round hook ending at bottom-left; the
+// two leaves are its dot.
 const J_PATH = 'M54 48 V68 Q54 84 38 84 Q30 84 26 77';
 function leaf(x, y, ang, ln, w, fill) {
   return `<path d="M0 0 C${ln*.35} ${-w} ${ln*.75} ${-w} ${ln} 0 C${ln*.75} ${w} ${ln*.35} ${w} 0 0Z" fill="${fill}" transform="translate(${x} ${y}) rotate(${ang})"/>`;
@@ -11,6 +13,45 @@ function markBody(j, l, r) {
   return `<path d="${J_PATH}" fill="none" stroke="${j}" stroke-width="14" stroke-linecap="butt"/>` +
          leaf(54, 46, -118, 34, 10, l) + leaf(54, 44, -62, 34, 10, r);
 }
+
+// ---------- the wordmark: "ukpo" drawn from the j ----------
+// No font: the letters are built from the j's own parts — the same 14 stroke, flat
+// cut ends, and round bowls. The j's flat top (48) is the x-height; the bottom of its
+// hook (91) is a round overshooting the baseline, so the baseline is 89.5 and every
+// round (u, p, o) overshoots it, and the x-height, by the same 1.5.
+// Options (all optional) tune the drawing: rx, the rounds' half-width at the centre
+// line; gap, the space between outlines (rounds sit 2 closer); asc and desc, how far
+// k and p reach past the x-height and the baseline.
+const WM = { T: 14, XT: 48, BL: 89.5, OV: 1.5 };
+function wmLayout(o = {}) {
+  const { T, XT, BL, OV } = WM, rx = o.rx ?? 15, gap = o.gap ?? 9, asc = o.asc ?? 22, desc = o.desc ?? 20;
+  const kw = 38 + (rx - 15);                 // k's arms grow with the rounds
+  const uL = 61 + gap + T / 2, uR = uL + 2 * rx - 2;
+  const k = uR + T / 2 + gap + T / 2;
+  const p = k + kw + 7 + gap - 1 + T / 2;     // 7: the leg's half-width at the baseline
+  const oX = p + 2 * rx + T / 2 + gap - 2 + rx + T / 2;
+  return { T, XT, BL, rx, asc, desc, kw, uL, uR, k, p, oX, cy: (XT + BL) / 2, ry: (BL - XT) / 2 + OV - T / 2, end: oX + rx + T / 2 };
+}
+function ukpo(fg, o) {
+  const L = wmLayout(o), { T, XT, BL, cy, rx, ry, kw } = L, id = `wmk${++ukpo.n}`;
+  const st = `fill="none" stroke="${fg}" stroke-width="${T}" stroke-linecap="butt"`;
+  const ellipse = x => `<ellipse cx="${x}" cy="${cy}" rx="${rx}" ry="${ry}" ${st}/>`;
+  const u = `<path d="M${L.uL} ${XT} V${cy} A${(L.uR - L.uL) / 2} ${ry} 0 0 0 ${L.uR} ${cy} M${L.uR} ${XT} V${BL}" ${st}/>`;
+  // k's arm and leg are a little lighter (12) so the notch between them stays open,
+  // and are cut flat at the x-height and the baseline like every stem.
+  const k = `<path d="M${L.k} ${XT - L.asc} V${BL}" ${st}/>` +
+    `<defs><clipPath id="${id}"><rect x="${L.k}" y="${XT}" width="${kw + 30}" height="${BL - XT}"/></clipPath></defs>` +
+    `<path clip-path="url(#${id})" d="M${L.k + 2} ${cy + 7} L${L.k + kw} ${XT - 10} M${L.k + 17} ${cy - 2} L${L.k + kw + 8} ${BL + 10}" fill="none" stroke="${fg}" stroke-width="${T - 2}"/>`;
+  const p = `<path d="M${L.p} ${XT} V${BL + L.desc}" ${st}/>` + ellipse(L.p + rx);
+  return u + k + p + ellipse(L.oX);
+}
+ukpo.n = 0;
+function wordmarkBody(fg, l, r, o) { return markBody(fg, l, r) + ukpo(fg, o); }
+function wordmarkBox(o) {
+  const L = wmLayout(o), top = Math.min(10, L.XT - L.asc) - 2, bottom = L.BL + Math.max(L.desc, 1.5) + 2;
+  return `16 ${top} ${L.end + 2 - 16} ${bottom - top}`;
+}
+
 // Bounding box of the mark in its own units, measured once in the page so the
 // mark is centred by its real outline (stroke included) in every icon.
 const BOX = (() => {
@@ -35,7 +76,9 @@ const BOX = (() => {
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 })();
 function icon(o, px, round) {
-  const s = (round ? 60 : 70) / BOX.h; // the mark is 70% of a square's height, 60% of a circle's
+  // The mark is 70% of a square's height, 60% of a circle's. At 32 px and under
+  // (favicons, tabs) it grows to 80% so the leaves and the hook stay readable.
+  const s = (px && px <= 32 ? 80 : round ? 60 : 70) / BOX.h;
   const tx = 50 - (BOX.x + BOX.w / 2) * s, ty = 50 - (BOX.y + BOX.h / 2) * s;
   const size = px ? ` width="${px}" height="${px}"` : '';
   // o.bg is a colour, or [top, bottom] for a vertical gradient. Every gradient gets
@@ -47,7 +90,7 @@ function icon(o, px, round) {
 }
 icon.n = 0;
 function lockup(j, l, r, bg, fg) {
-  return `<div class="lock" style="background:${bg}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="18 8 140 86">${markBody(j, l, r)}<text x="66" y="68" font-family="Geist, system-ui, sans-serif" font-weight="700" font-size="40" letter-spacing="-1" fill="${fg}">ukpo</text></svg></div>`;
+  return `<div class="lock" style="background:${bg}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="${wordmarkBox()}">${wordmarkBody(fg, l, r)}</svg></div>`;
 }
 
 // ---------- generic neighbour icons ----------
