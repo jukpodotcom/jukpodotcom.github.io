@@ -4,125 +4,370 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="Jukpo turns any topic into lessons and practice so you can learn at your own pace and make it stick. Coming soon.">
-  <title>Jukpo — Coming soon</title>
+  <meta name="description" content="Jukpo is a free, open-source desktop app for learning anything at your pace: lessons and practice for any topic, using the model you already have.">
+  <title>Jukpo — Learn anything, at your pace</title>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <style>
+    /* Colours follow the app's theme.css: Graphite (dark) by default, Paper (light) by preference. */
     :root {
-      --bg: #111111;
+      --surface: #101010;
+      --page: #151515;
+      --card: #1d1d1c;
+      --line: #2b2b29;
+      --edge: #6a6a66;
       --ink: #ececec;
-      --muted: #bcbfba;
-      --lesson: #1c2520;
-      --practice: #2b211e;
-      --guide: #484b47;
+      --soft: #b8b7b2;
+      --faint: #94938e;
+      --primary: #ececec;
+      --primary-ink: #111111;
       --sage: #8fc39a;
-      --coral: #ff9e7d;
+      --sage-ink: #8fc39a;
+      --peach: #ff9e7d;
+      --focus: #8fc39a;
+      --mock: #e5c07b;
+      --radius: 12px;
+      --wide: 72rem;
     }
     @media (prefers-color-scheme: light) {
       :root {
-        --bg: #ffffff;
-        --ink: #1e1e1e;
-        --muted: #555a55;
-        --lesson: #edf5ee;
-        --practice: #fff1eb;
-        --guide: #ccd5cb;
+        --surface: #edede8;
+        --page: #f5f5f2;
+        --card: #ffffff;
+        --line: #e3e3de;
+        --edge: #888882;
+        --ink: #18181b;
+        --soft: #4e4e54;
+        --faint: #6b6b70;
+        --primary: #18181b;
+        --primary-ink: #ffffff;
+        --sage: #4f8a5b;
+        --sage-ink: #3f7a4c;
+        --peach: #e8774c;
+        --focus: #3f7a4c;
+        --mock: #9a6700;
       }
     }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
     body {
-      min-height: 100vh;
-      min-height: 100svh;
       margin: 0;
-      display: grid;
-      place-items: center;
-      background: var(--bg);
+      background: var(--page);
       color: var(--ink);
       font-family: system-ui, sans-serif;
+      font-size: 1rem;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
-    main {
-      box-sizing: border-box;
-      width: 100%;
-      max-width: 74rem;
-      padding: clamp(2rem, 6vw, 4rem) clamp(1.25rem, 5vw, 3rem);
+    a { color: inherit; }
+    :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
+    .wrap { width: 100%; max-width: var(--wide); margin: 0 auto; padding: 0 clamp(1.25rem, 4vw, 2.5rem); }
+    .skip { position: absolute; left: -999px; top: 0; }
+    .skip:focus { left: 1rem; top: 1rem; z-index: 10; background: var(--card); padding: .5rem .75rem; }
+
+    /* Mockup scaffolding: a label on each section so it can be referred to. Remove before launch. */
+    [data-mock] { position: relative; }
+    [data-mock]::before {
+      content: attr(data-mock);
+      position: absolute;
+      top: .75rem;
+      right: .75rem;
+      font: 600 .6875rem/1 ui-monospace, monospace;
+      letter-spacing: .04em;
+      color: var(--mock);
+      border: 1px dashed var(--mock);
+      border-radius: 4px;
+      padding: .3rem .45rem;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .placeholder {
+      display: grid;
+      place-items: center;
       text-align: center;
+      border: 1.5px dashed var(--edge);
+      border-radius: var(--radius);
+      color: var(--faint);
+      font-size: .875rem;
+      padding: 1.5rem;
+      background: repeating-linear-gradient(135deg, transparent 0 14px, color-mix(in srgb, var(--line) 45%, transparent) 14px 15px);
     }
-    svg { display: block; height: auto; }
-    .wordmark {
-      width: 7rem;
-      margin: 0 auto clamp(1.75rem, 4vw, 3rem);
-      fill: var(--ink);
+    .placeholder strong { display: block; color: var(--soft); font-weight: 600; }
+
+    /* Header */
+    header { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--page) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+    header .wrap { display: flex; align-items: center; gap: 1.5rem; height: 4rem; }
+    .brand { display: inline-flex; text-decoration: none; }
+    .brand svg { width: 5.5rem; height: auto; display: block; fill: var(--ink); }
+    nav ul { display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; font-size: .9375rem; }
+    nav a { text-decoration: none; color: var(--soft); }
+    nav a:hover { color: var(--ink); }
+    .header-actions { margin-left: auto; display: flex; gap: .5rem; }
+    @media (max-width: 52rem) { nav { display: none; } }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      height: 2.5rem; padding: 0 1rem;
+      border-radius: 8px; border: 1px solid var(--line);
+      font-size: .9375rem; font-weight: 600; text-decoration: none;
+      background: var(--card); color: var(--ink);
     }
-    h1 {
-      margin: 0;
-      font-size: clamp(2.5rem, 11.5vw, 5rem);
-      line-height: 1;
-      letter-spacing: -0.065em;
+    .btn:hover { border-color: var(--edge); }
+    .btn.primary { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+    .btn.large { height: 3rem; padding: 0 1.375rem; font-size: 1rem; }
+    .btn svg { width: 1.125rem; height: 1.125rem; fill: currentColor; }
+
+    section { padding: clamp(4rem, 9vw, 7rem) 0; }
+    section + section { border-top: 1px solid var(--line); }
+    .eyebrow { display: inline-flex; align-items: center; gap: .5rem; font-size: .8125rem; font-weight: 600; color: var(--sage-ink); letter-spacing: .02em; margin: 0 0 1rem; }
+    h1, h2, h3 { margin: 0; letter-spacing: -0.025em; line-height: 1.1; }
+    h1 { font-size: clamp(2.75rem, 7vw, 4.75rem); letter-spacing: -0.045em; }
+    h2 { font-size: clamp(2rem, 4.2vw, 3rem); letter-spacing: -0.035em; }
+    h3 { font-size: 1.125rem; letter-spacing: -0.01em; }
+    .lead { font-size: clamp(1.0625rem, 2vw, 1.25rem); color: var(--soft); max-width: 38rem; margin: 1.25rem 0 0; }
+    .section-head { max-width: 40rem; margin-bottom: clamp(2.5rem, 5vw, 3.5rem); }
+    .section-head p { color: var(--soft); margin: 1rem 0 0; font-size: 1.0625rem; }
+
+    /* §1 Hero */
+    .hero { text-align: center; padding-top: clamp(4rem, 10vw, 7.5rem); }
+    .hero .lead { margin-inline: auto; }
+    .hero .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; margin-top: 2.25rem; }
+    .hero .platforms { margin-top: 1rem; color: var(--faint); font-size: .875rem; }
+    .shot { margin-top: clamp(3rem, 7vw, 4.5rem); aspect-ratio: 16 / 10; border-radius: 14px; box-shadow: 0 24px 60px rgb(0 0 0 / .35); background-color: var(--card); }
+
+    /* §2 How it works */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; counter-reset: step; list-style: none; margin: 0; padding: 0; }
+    .steps li { counter-increment: step; }
+    .steps .placeholder { aspect-ratio: 4 / 3; margin-bottom: 1.25rem; }
+    .steps h3::before { content: counter(step); display: inline-grid; place-items: center; width: 1.625rem; height: 1.625rem; margin-right: .625rem; border-radius: 50%; background: var(--sage); color: var(--primary-ink); font-size: .8125rem; vertical-align: .1em; }
+    @media (prefers-color-scheme: light) { .steps h3::before { color: #fff; } }
+    .steps p { color: var(--soft); margin: .625rem 0 0; }
+    @media (max-width: 52rem) { .steps { grid-template-columns: 1fr; } }
+
+    /* §3 Features */
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .feature { background: var(--page); padding: 1.75rem; }
+    .feature .icon { width: 2.25rem; height: 2.25rem; border-radius: 8px; border: 1px dashed var(--edge); margin-bottom: 1.125rem; }
+    .feature p { color: var(--soft); margin: .5rem 0 0; font-size: .9375rem; }
+    @media (max-width: 60rem) { .features { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 38rem) { .features { grid-template-columns: 1fr; } }
+
+    /* §4 and §5 split sections */
+    .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(2.5rem, 6vw, 5rem); align-items: center; }
+    .split .section-head { margin-bottom: 0; }
+    .split .placeholder { aspect-ratio: 5 / 4; }
+    @media (max-width: 52rem) { .split { grid-template-columns: minmax(0, 1fr); } }
+    .list { list-style: none; padding: 0; margin: 1.75rem 0 0; display: grid; gap: .875rem; }
+    .list li { display: flex; gap: .75rem; color: var(--soft); }
+    .list li::before { content: ""; flex: none; width: .5rem; height: .5rem; margin-top: .6rem; border-radius: 50%; background: var(--sage); }
+    .list strong { color: var(--ink); font-weight: 600; }
+    .providers { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .provider { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 1rem 1.125rem; }
+    .provider span { display: block; color: var(--faint); font-size: .8125rem; margin-top: .125rem; }
+
+    /* §6 Open source */
+    .oss { background: var(--surface); }
+    pre {
+      margin: 0; overflow-x: auto;
+      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 1.25rem 1.5rem; font: .875rem/1.8 ui-monospace, monospace; color: var(--soft);
     }
-    p {
-      max-width: 34ch;
-      margin: 1.125rem auto 0;
-      color: var(--muted);
-      font-size: clamp(1rem, 2.6vw, 1.25rem);
-      line-height: 1.55;
-    }
-    .study {
-      width: min(66%, 16rem);
-      margin: 1.5rem auto 0;
-    }
-    @media (min-width: 52rem) {
-      main {
-        display: grid;
-        grid-template-columns: 1.35fr 1fr;
-        align-items: center;
-        gap: 2rem;
-        text-align: start;
-      }
-      .wordmark { margin-inline: 0; }
-      h1 { font-size: clamp(3.5rem, 7.1vw, 6rem); }
-      p { margin-inline: 0; }
-      .study { width: 100%; margin: 0; }
-    }
+    pre .prompt { color: var(--sage-ink); user-select: none; }
+    .oss .actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+    .fineprint { color: var(--faint); font-size: .8125rem; margin-top: 1.25rem; }
+
+    /* §7 Download */
+    .downloads { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .platform { border: 1px solid var(--line); background: var(--card); border-radius: var(--radius); padding: 1.75rem; display: flex; flex-direction: column; gap: .375rem; }
+    .platform p { margin: 0 0 1.25rem; color: var(--faint); font-size: .875rem; }
+    .platform .btn { margin-top: auto; justify-content: center; }
+    .platform .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+    @media (max-width: 52rem) { .downloads { grid-template-columns: 1fr; } }
+
+    footer { border-top: 1px solid var(--line); padding: 2.5rem 0; color: var(--faint); font-size: .875rem; }
+    footer .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 2rem; }
+    footer svg { width: 4.25rem; height: auto; fill: var(--ink); display: block; }
+    footer ul { display: flex; flex-wrap: wrap; gap: 1.5rem; list-style: none; margin: 0 0 0 auto; padding: 0; }
+    footer a { text-decoration: none; }
+    footer a:hover { color: var(--ink); }
   </style>
 </head>
 <body>
-  <main>
-    <div>
-      <svg class="wordmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 254 100" role="img" aria-label="Jukpo">
-        <path d="M42,37.54 L42,57.54 Q42,68.44 35.95,74.49 Q29.9,80.54 19,80.54 Q6.94,80.54 0.92,70.01 L13.08,63.07 Q15.06,66.54 19,66.54 Q24.1,66.54 26.05,64.59 Q28,62.64 28,57.54 L28,37.54 Z"/>
-        <path fill="var(--sage)" d="M35,35.54 C20.58,29.73 14.2,17.72 19.04,5.52 C31.86,8.33 38.24,20.34 35,35.54 Z"/>
-        <path fill="var(--coral)" d="M35,33.54 C31.76,18.34 38.14,6.33 50.96,3.52 C55.8,15.72 49.42,27.73 35,33.54 Z"/>
-        <path d="M62.65,37.54 L62.65,58.29 Q62.65,61.61 65.17,64.01 Q67.82,66.54 71.65,66.54 Q75.48,66.54 78.13,64.01 Q80.65,61.61 80.65,58.29 L80.65,37.54 L94.65,37.54 L94.65,58.29 Q94.65,67.61 87.79,74.14 Q81.08,80.54 71.65,80.54 Q62.22,80.54 55.51,74.14 Q48.65,67.61 48.65,58.29 L48.65,37.54 Z"/>
-        <path d="M116.44,21.54 L116.44,79.04 L102.44,79.04 L102.44,21.54 L116.44,21.54 Z"/>
-        <path d="M134.35,79.04 L120.88,64.15 L113.74,71.48 L109.44,67.29 L109.44,58.7 L130.06,37.54 L146.82,37.54 L129.27,55.54 L150.53,79.04 Z"/>
-        <path d="M167.41,58.29 L167.41,99.04 L153.41,99.04 L153.41,58.29 L167.41,58.29 Z"/>
-        <path d="M201.41,58.29 Q201.41,67.73 194.1,74.28 Q187.13,80.54 177.41,80.54 Q167.69,80.54 160.72,74.28 Q153.41,67.73 153.41,58.29 Q153.41,48.85 160.72,42.3 Q167.69,36.04 177.41,36.04 Q187.13,36.04 194.1,42.3 Q201.41,48.85 201.41,58.29 Z M187.41,58.29 Q187.41,55.1 184.76,52.72 Q181.77,50.04 177.41,50.04 Q173.05,50.04 170.06,52.72 Q167.41,55.1 167.41,58.29 Q167.41,61.48 170.06,63.86 Q173.05,66.54 177.41,66.54 Q181.77,66.54 184.76,63.86 Q187.41,61.48 187.41,58.29 Z"/>
-        <path d="M252.98,58.29 Q252.98,67.73 245.68,74.28 Q238.7,80.54 228.98,80.54 Q219.26,80.54 212.28,74.28 Q204.98,67.73 204.98,58.29 Q204.98,48.85 212.28,42.3 Q219.26,36.04 228.98,36.04 Q238.7,36.04 245.68,42.3 Q252.98,48.85 252.98,58.29 Z M238.98,58.29 Q238.98,55.1 236.33,52.72 Q233.34,50.04 228.98,50.04 Q224.62,50.04 221.63,52.72 Q218.98,55.1 218.98,58.29 Q218.98,61.48 221.63,63.86 Q224.62,66.54 228.98,66.54 Q233.34,66.54 236.33,63.86 Q238.98,61.48 238.98,58.29 Z"/>
-      </svg>
-      <h1>Coming soon.</h1>
-      <p>What are you curious about? Jukpo turns any topic into lessons and practice so you can learn at your own pace and make it stick.</p>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="wordmark" viewBox="0 0 254 100">
+      <path d="M42,37.54 L42,57.54 Q42,68.44 35.95,74.49 Q29.9,80.54 19,80.54 Q6.94,80.54 0.92,70.01 L13.08,63.07 Q15.06,66.54 19,66.54 Q24.1,66.54 26.05,64.59 Q28,62.64 28,57.54 L28,37.54 Z"/>
+      <path fill="#8fc39a" d="M35,35.54 C20.58,29.73 14.2,17.72 19.04,5.52 C31.86,8.33 38.24,20.34 35,35.54 Z"/>
+      <path fill="#ff9e7d" d="M35,33.54 C31.76,18.34 38.14,6.33 50.96,3.52 C55.8,15.72 49.42,27.73 35,33.54 Z"/>
+      <path d="M62.65,37.54 L62.65,58.29 Q62.65,61.61 65.17,64.01 Q67.82,66.54 71.65,66.54 Q75.48,66.54 78.13,64.01 Q80.65,61.61 80.65,58.29 L80.65,37.54 L94.65,37.54 L94.65,58.29 Q94.65,67.61 87.79,74.14 Q81.08,80.54 71.65,80.54 Q62.22,80.54 55.51,74.14 Q48.65,67.61 48.65,58.29 L48.65,37.54 Z"/>
+      <path d="M116.44,21.54 L116.44,79.04 L102.44,79.04 L102.44,21.54 L116.44,21.54 Z"/>
+      <path d="M134.35,79.04 L120.88,64.15 L113.74,71.48 L109.44,67.29 L109.44,58.7 L130.06,37.54 L146.82,37.54 L129.27,55.54 L150.53,79.04 Z"/>
+      <path d="M167.41,58.29 L167.41,99.04 L153.41,99.04 L153.41,58.29 L167.41,58.29 Z"/>
+      <path d="M201.41,58.29 Q201.41,67.73 194.1,74.28 Q187.13,80.54 177.41,80.54 Q167.69,80.54 160.72,74.28 Q153.41,67.73 153.41,58.29 Q153.41,48.85 160.72,42.3 Q167.69,36.04 177.41,36.04 Q187.13,36.04 194.1,42.3 Q201.41,48.85 201.41,58.29 Z M187.41,58.29 Q187.41,55.1 184.76,52.72 Q181.77,50.04 177.41,50.04 Q173.05,50.04 170.06,52.72 Q167.41,55.1 167.41,58.29 Q167.41,61.48 170.06,63.86 Q173.05,66.54 177.41,66.54 Q181.77,66.54 184.76,63.86 Q187.41,61.48 187.41,58.29 Z"/>
+      <path d="M252.98,58.29 Q252.98,67.73 245.68,74.28 Q238.7,80.54 228.98,80.54 Q219.26,80.54 212.28,74.28 Q204.98,67.73 204.98,58.29 Q204.98,48.85 212.28,42.3 Q219.26,36.04 228.98,36.04 Q238.7,36.04 245.68,42.3 Q252.98,48.85 252.98,58.29 Z M238.98,58.29 Q238.98,55.1 236.33,52.72 Q233.34,50.04 228.98,50.04 Q224.62,50.04 221.63,52.72 Q218.98,55.1 218.98,58.29 Q218.98,61.48 221.63,63.86 Q224.62,66.54 228.98,66.54 Q233.34,66.54 236.33,63.86 Q238.98,61.48 238.98,58.29 Z"/>
+    </symbol>
+    <symbol id="github" viewBox="0 0 16 16">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+    </symbol>
+  </svg>
+
+  <header data-mock="§0 Header">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="Jukpo home"><svg aria-hidden="true"><use href="#wordmark"/></svg></a>
+      <nav aria-label="Main">
+        <ul>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#models">Models</a></li>
+          <li><a href="#open-source">Open source</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <a class="btn" href="https://github.com/jukpodotcom/jukpo"><svg aria-hidden="true"><use href="#github"/></svg>GitHub</a>
+        <a class="btn primary" href="#download">Download</a>
+      </div>
     </div>
-    <svg class="study" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 310" aria-hidden="true">
-      <ellipse cx="200" cy="155" rx="181" ry="97" transform="rotate(-23 200 155)"
-        fill="none" stroke="var(--guide)" stroke-width="1.5" stroke-dasharray="2 7" stroke-linecap="round"/>
-      <g transform="rotate(-12 162 150)">
-        <rect x="74" y="45" width="176" height="210" rx="14" fill="var(--lesson)" stroke="var(--sage)" stroke-width="1.5"/>
-        <path d="M104 74v19m-9.5-9.5h19" fill="none" stroke="var(--sage)" stroke-width="2" stroke-linecap="round"/>
-        <path d="M127 84h48M99 113h125" fill="none" stroke="var(--guide)" stroke-width="1.5" stroke-linecap="round"/>
-        <rect x="99" y="132" width="125" height="59" rx="7" fill="var(--sage)" opacity=".18"/>
-        <path d="m114 172 24-15 23 9 43-21" fill="none" stroke="var(--sage)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="204" cy="145" r="3.5" fill="var(--sage)"/>
-        <path d="M99 211h84m-84 13h54" fill="none" stroke="var(--guide)" stroke-width="1.5" stroke-linecap="round"/>
-      </g>
-      <g transform="rotate(11 274 194)">
-        <rect x="201" y="139" width="146" height="110" rx="14" fill="var(--practice)" stroke="var(--coral)" stroke-width="1.5"/>
-        <circle cx="232" cy="174" r="13" fill="var(--coral)"/>
-        <path d="m227 174 3.5 3.5 6.5-7" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M256 174h61m-98 29h108m-108 13h74" fill="none" stroke="var(--guide)" stroke-width="1.5" stroke-linecap="round"/>
-      </g>
-      <circle cx="344" cy="69" r="4" fill="var(--sage)"/>
-      <circle cx="58" cy="239" r="4" fill="var(--coral)"/>
-    </svg>
+  </header>
+
+  <main id="main">
+    <section class="hero" data-mock="§1 Hero">
+      <div class="wrap">
+        <p class="eyebrow">Free and open source · MIT licence</p>
+        <h1>Learn anything,<br>at your pace.</h1>
+        <p class="lead">Tell Jukpo what you want to learn. It maps the topic into ideas, writes a short lesson for each, and asks you questions at the right times so it sticks.</p>
+        <div class="actions">
+          <a class="btn primary large" href="#download">Download for desktop</a>
+          <a class="btn large" href="https://github.com/jukpodotcom/jukpo"><svg aria-hidden="true"><use href="#github"/></svg>View on GitHub</a>
+        </div>
+        <p class="platforms">Linux · macOS · Windows. Mobile later.</p>
+        <div class="placeholder shot"><div><strong>App screenshot</strong>A Space’s page: its graph of areas and ideas, the sidebar, and an idea selected</div></div>
+      </div>
+    </section>
+
+    <section id="how" data-mock="§2 How it works">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">How it works</p>
+          <h2>From curious to confident, one idea at a time.</h2>
+        </div>
+        <ol class="steps">
+          <li>
+            <div class="placeholder"><div><strong>Screenshot</strong>New space: a topic typed in, areas being drafted</div></div>
+            <h3>Start a Space</h3>
+            <p>Name any topic. Jukpo drafts its areas, the ideas in each and their key points, plus a big picture of how it fits together.</p>
+          </li>
+          <li>
+            <div class="placeholder"><div><strong>Screenshot</strong>A lesson card, with a highlight and a note beside it</div></div>
+            <h3>Read a short lesson</h3>
+            <p>Each idea gets a lesson in cards, written to scan and then read. Highlight, take notes, or ask the tutor to explain something more simply.</p>
+          </li>
+          <li>
+            <div class="placeholder"><div><strong>Screenshot</strong>A practice question, answered, with feedback</div></div>
+            <h3>Practice until it sticks</h3>
+            <p>Answer questions written from the lesson. A daily sitting brings back what’s due, so what you learn comes back when you need it.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="features" data-mock="§3 Features">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Features</p>
+          <h2>Built for learning, not just reading.</h2>
+        </div>
+        <div class="features">
+          <article class="feature"><div class="icon" aria-hidden="true"></div><h3>A map of every topic</h3><p>See a Space as a graph of its areas and ideas, and how each idea stands.</p></article>
+          <article class="feature"><div class="icon" aria-hidden="true"></div><h3>Everything due today</h3><p>Sittings choose what to look at today: new ideas to start and old ones to recall.</p></article>
+          <article class="feature"><div class="icon" aria-hidden="true"></div><h3>Many kinds of question</h3><p>Tap, sort, match, fill a gap, predict, explain it back, spot the flaw, write code.</p></article>
+          <article class="feature"><div class="icon" aria-hidden="true"></div><h3>Notes in Markdown</h3><p>Highlights and notes sit beside the lesson and are kept as plain Markdown files.</p></article>
+          <article class="feature"><div class="icon" aria-hidden="true"></div><h3>A tutor on hand</h3><p>Select any words in a lesson to ask about them or have them explained more simply.</p></article>
+          <article class="feature"><div class="icon" aria-hidden="true"></div><h3>Grows with you</h3><p>When an idea or area gets too big, Jukpo offers to split it. Nothing changes until you say yes.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="models" data-mock="§4 Bring your own model">
+      <div class="wrap split">
+        <div class="section-head">
+          <p class="eyebrow">Bring your own model</p>
+          <h2>Uses the AI you already have.</h2>
+          <p>Jukpo writes lessons, questions and feedback with a model you connect. Sign in with a tool you already use, or point it at any OpenAI-compatible server, including one on your own computer.</p>
+        </div>
+        <div class="providers">
+          <div class="provider"><strong>Claude Code</strong><span>Anthropic</span></div>
+          <div class="provider"><strong>Codex</strong><span>OpenAI</span></div>
+          <div class="provider"><strong>Antigravity</strong><span>Google</span></div>
+          <div class="provider"><strong>OpenAI-compatible</strong><span>Any server, local or hosted</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="data" data-mock="§5 Your data">
+      <div class="wrap split">
+        <div class="placeholder"><div><strong>Illustration</strong>The record folder: a Space’s logs and its Markdown notes</div></div>
+        <div class="section-head">
+          <p class="eyebrow">Your record, your files</p>
+          <h2>Everything you learn stays in a folder you choose.</h2>
+          <ul class="list">
+            <li><span><strong>Plain files on your computer.</strong> Your progress is a log that is only ever added to; notes are Markdown.</span></li>
+            <li><span><strong>Sync it your way.</strong> Put the folder in Syncthing or another sync tool to learn on more than one computer.</span></li>
+            <li><span><strong>Nothing is lost by accident.</strong> Spaces are archived, not deleted, until you ask to delete one forever.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="open-source" class="oss" data-mock="§6 Open source">
+      <div class="wrap split">
+        <div class="section-head">
+          <p class="eyebrow">Open source</p>
+          <h2>MIT-licensed. Take it, change it, make it your own.</h2>
+          <p>Jukpo is Electron and React over a plain TypeScript core. Contributions are welcome; the contributing guide explains the layout and the rules.</p>
+          <div class="actions">
+            <a class="btn primary" href="https://github.com/jukpodotcom/jukpo"><svg aria-hidden="true"><use href="#github"/></svg>Star on GitHub</a>
+            <a class="btn" href="https://github.com/jukpodotcom/jukpo/blob/main/CONTRIBUTING.md">Contributing guide</a>
+          </div>
+        </div>
+        <div>
+          <pre aria-label="Run Jukpo from source"><code><span class="prompt">$ </span>git clone https://github.com/jukpodotcom/jukpo
+<span class="prompt">$ </span>cd jukpo
+<span class="prompt">$ </span>npm install
+<span class="prompt">$ </span>npm run dev</code></pre>
+          <p class="fineprint">Needs Node 24 or newer. The Jukpo name, logo and icons are not covered by the MIT licence.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="download" data-mock="§7 Download">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Download</p>
+          <h2>Get Jukpo for your desktop.</h2>
+          <p>Free, with no account. Mobile is planned.</p>
+        </div>
+        <div class="downloads">
+          <div class="platform"><h3>Linux</h3><p>.deb and AppImage</p><a class="btn" aria-disabled="true">Coming soon</a></div>
+          <div class="platform"><h3>macOS</h3><p>Apple silicon and Intel</p><a class="btn" aria-disabled="true">Coming soon</a></div>
+          <div class="platform"><h3>Windows</h3><p>Installer</p><a class="btn" aria-disabled="true">Coming soon</a></div>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer data-mock="§8 Footer">
+    <div class="wrap">
+      <svg role="img" aria-label="Jukpo"><use href="#wordmark"/></svg>
+      <span>Learn anything, at your pace.</span>
+      <ul>
+        <li><a href="https://github.com/jukpodotcom/jukpo">GitHub</a></li>
+        <li><a href="https://github.com/jukpodotcom/jukpo/blob/main/LICENSE">Licence</a></li>
+        <li><a href="https://github.com/jukpodotcom/jukpo/releases">Releases</a></li>
+      </ul>
+    </div>
+  </footer>
 </body>
 </html>
