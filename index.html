@@ -4,13 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="Jukpo is a free, open-source desktop app for learning anything at your pace: lessons and practice for any topic, using the model you already have.">
+  <meta name="description" content="Jukpo is a free, open-source desktop app for learning anything at your pace: it maps a topic into ideas, writes a lesson for each, and brings back practice when it's due.">
   <title>Jukpo — Learn anything, at your pace</title>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <style>
-    /* Colours follow the app's theme.css: Graphite (dark) by default, Paper (light) by preference. */
+    /* Geist, the app's typeface (SIL Open Font License: /assets/fonts/LICENSE.txt). */
+    @font-face { font-family: "Geist"; font-weight: 400; font-display: swap; src: url("/assets/fonts/Geist-Regular.woff2") format("woff2"); }
+    @font-face { font-family: "Geist"; font-weight: 500; font-display: swap; src: url("/assets/fonts/Geist-Medium.woff2") format("woff2"); }
+    @font-face { font-family: "Geist"; font-weight: 600; font-display: swap; src: url("/assets/fonts/Geist-SemiBold.woff2") format("woff2"); }
+    @font-face { font-family: "Geist Mono"; font-weight: 400; font-display: swap; src: url("/assets/fonts/GeistMono-Regular.woff2") format("woff2"); }
+
+    /*
+     * Colours are the app's own (theme.css): Graphite by default, Paper when the system asks for light.
+     * The screenshots carry the app's page colour at their edges, so a pane here uses the same colour and
+     * a screenshot sits in it without a seam.
+     */
     :root {
       --surface: #101010;
       --page: #151515;
@@ -25,10 +35,13 @@
       --sage: #8fc39a;
       --sage-ink: #8fc39a;
       --peach: #ff9e7d;
-      --focus: #8fc39a;
       --mock: #e5c07b;
-      --radius: 12px;
+      --lift: 0 30px 80px rgb(0 0 0 / .5);
+      --glow: .16;
+      --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+      --mono: "Geist Mono", ui-monospace, monospace;
       --wide: 72rem;
+      --fade: linear-gradient(to right, #000 68%, transparent 97%);
     }
     @media (prefers-color-scheme: light) {
       :root {
@@ -45,24 +58,26 @@
         --sage: #4f8a5b;
         --sage-ink: #3f7a4c;
         --peach: #e8774c;
-        --focus: #3f7a4c;
         --mock: #9a6700;
+        --lift: 0 30px 70px rgb(0 0 0 / .14);
+        --glow: .22;
       }
     }
+
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
     body {
       margin: 0;
-      background: var(--page);
+      background: var(--surface);
       color: var(--ink);
-      font-family: system-ui, sans-serif;
-      font-size: 1rem;
+      font-family: var(--sans);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
     }
     a { color: inherit; }
-    :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
+    img { display: block; width: 100%; height: auto; }
+    :focus-visible { outline: 2px solid var(--sage-ink); outline-offset: 3px; border-radius: 4px; }
     .wrap { width: 100%; max-width: var(--wide); margin: 0 auto; padding: 0 clamp(1.25rem, 4vw, 2.5rem); }
     .skip { position: absolute; left: -999px; top: 0; }
     .skip:focus { left: 1rem; top: 1rem; z-index: 10; background: var(--card); padding: .5rem .75rem; }
@@ -74,117 +89,142 @@
       position: absolute;
       top: .75rem;
       right: .75rem;
-      font: 600 .6875rem/1 ui-monospace, monospace;
-      letter-spacing: .04em;
+      font: .6875rem/1 var(--mono);
       color: var(--mock);
       border: 1px dashed var(--mock);
       border-radius: 4px;
       padding: .3rem .45rem;
       pointer-events: none;
-      z-index: 1;
     }
-    .placeholder {
-      display: grid;
-      place-items: center;
-      text-align: center;
-      border: 1.5px dashed var(--edge);
-      border-radius: var(--radius);
-      color: var(--faint);
-      font-size: .875rem;
-      padding: 1.5rem;
-      background: repeating-linear-gradient(135deg, transparent 0 14px, color-mix(in srgb, var(--line) 45%, transparent) 14px 15px);
+
+    h1, h2, h3 { margin: 0; font-weight: 600; line-height: 1.1; }
+    h1 { font-size: clamp(2.75rem, 7.4vw, 5.25rem); letter-spacing: -0.05em; line-height: 1; }
+    h2 { font-size: clamp(2rem, 4.4vw, 3.25rem); letter-spacing: -0.04em; }
+    h3 { font-size: 1.0625rem; letter-spacing: -0.01em; line-height: 1.3; }
+    section { padding: clamp(4.5rem, 10vw, 8rem) 0; }
+    .eyebrow { margin: 0 0 1.125rem; font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--sage-ink); }
+    .section-head { max-width: 42rem; margin-bottom: clamp(2.5rem, 6vw, 4rem); }
+    .section-head p:not(.eyebrow) { margin: 1.125rem 0 0; color: var(--soft); font-size: 1.125rem; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+      height: 2.5rem; padding: 0 1rem;
+      border: 1px solid var(--line); border-radius: 8px;
+      background: var(--card); color: var(--ink);
+      font-size: .9375rem; font-weight: 500; text-decoration: none;
     }
-    .placeholder strong { display: block; color: var(--soft); font-weight: 600; }
+    .btn:hover { border-color: var(--edge); }
+    .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+    .btn.primary:hover { opacity: .9; }
+    .btn.large { height: 3rem; padding: 0 1.375rem; font-size: 1rem; }
+    .btn svg { width: 1.125rem; height: 1.125rem; fill: currentColor; }
+
+    /* A pane: the app's page colour behind a hairline, where a screenshot sits. */
+    .pane { background: var(--page); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .pane picture { display: block; }
 
     /* Header */
-    header { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--page) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
-    header .wrap { display: flex; align-items: center; gap: 1.5rem; height: 4rem; }
-    .brand { display: inline-flex; text-decoration: none; }
-    .brand svg { width: 5.5rem; height: auto; display: block; fill: var(--ink); }
-    nav ul { display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; font-size: .9375rem; }
-    nav a { text-decoration: none; color: var(--soft); }
+    header { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--surface) 85%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+    header .wrap { display: flex; align-items: center; gap: 2rem; height: 4rem; }
+    .brand { display: inline-flex; }
+    .brand svg { width: 5.25rem; height: auto; fill: var(--ink); }
+    nav ul { display: flex; gap: 1.75rem; list-style: none; margin: 0; padding: 0; font-size: .9375rem; }
+    nav a { color: var(--soft); text-decoration: none; }
     nav a:hover { color: var(--ink); }
     .header-actions { margin-left: auto; display: flex; gap: .5rem; }
     @media (max-width: 52rem) { nav { display: none; } }
 
-    .btn {
-      display: inline-flex; align-items: center; gap: .5rem;
-      height: 2.5rem; padding: 0 1rem;
-      border-radius: 8px; border: 1px solid var(--line);
-      font-size: .9375rem; font-weight: 600; text-decoration: none;
-      background: var(--card); color: var(--ink);
-    }
-    .btn:hover { border-color: var(--edge); }
-    .btn.primary { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
-    .btn.large { height: 3rem; padding: 0 1.375rem; font-size: 1rem; }
-    .btn svg { width: 1.125rem; height: 1.125rem; fill: currentColor; }
-
-    section { padding: clamp(4rem, 9vw, 7rem) 0; }
-    section + section { border-top: 1px solid var(--line); }
-    .eyebrow { display: inline-flex; align-items: center; gap: .5rem; font-size: .8125rem; font-weight: 600; color: var(--sage-ink); letter-spacing: .02em; margin: 0 0 1rem; }
-    h1, h2, h3 { margin: 0; letter-spacing: -0.025em; line-height: 1.1; }
-    h1 { font-size: clamp(2.75rem, 7vw, 4.75rem); letter-spacing: -0.045em; }
-    h2 { font-size: clamp(2rem, 4.2vw, 3rem); letter-spacing: -0.035em; }
-    h3 { font-size: 1.125rem; letter-spacing: -0.01em; }
-    .lead { font-size: clamp(1.0625rem, 2vw, 1.25rem); color: var(--soft); max-width: 38rem; margin: 1.25rem 0 0; }
-    .section-head { max-width: 40rem; margin-bottom: clamp(2.5rem, 5vw, 3.5rem); }
-    .section-head p { color: var(--soft); margin: 1rem 0 0; font-size: 1.0625rem; }
-
     /* §1 Hero */
-    .hero { text-align: center; padding-top: clamp(4rem, 10vw, 7.5rem); }
-    .hero .lead { margin-inline: auto; }
-    .hero .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; margin-top: 2.25rem; }
-    .hero .platforms { margin-top: 1rem; color: var(--faint); font-size: .875rem; }
-    .shot { margin-top: clamp(3rem, 7vw, 4.5rem); aspect-ratio: 16 / 10; border-radius: 14px; box-shadow: 0 24px 60px rgb(0 0 0 / .35); background-color: var(--card); }
+    .hero { padding-top: clamp(3rem, 7vw, 5.5rem); padding-bottom: clamp(3rem, 6vw, 5rem); text-align: center; overflow: hidden; }
+    .hero .eyebrow { display: inline-flex; align-items: center; gap: .5rem; padding: .4rem .75rem; border: 1px solid var(--line); border-radius: 99px; background: var(--page); color: var(--soft); letter-spacing: .04em; text-transform: none; font-weight: 500; font-size: .8125rem; }
+    .hero .eyebrow::before { content: ""; width: .4375rem; height: .4375rem; border-radius: 50%; background: var(--sage); }
+    .lead { max-width: 37rem; margin: 1.5rem auto 0; color: var(--soft); font-size: clamp(1.0625rem, 2vw, 1.25rem); }
+    .actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2.25rem; }
+    .hero .actions { justify-content: center; }
+    .platforms { margin: 1.125rem 0 0; color: var(--faint); font-size: .875rem; }
+    .window { position: relative; margin-top: clamp(2.5rem, 5vw, 3.75rem); }
+    .window::before {
+      content: ""; position: absolute; inset: -12% -6% 20%; z-index: -1;
+      background:
+        radial-gradient(40% 55% at 30% 40%, color-mix(in srgb, var(--sage) calc(var(--glow) * 100%), transparent), transparent 70%),
+        radial-gradient(40% 55% at 70% 45%, color-mix(in srgb, var(--peach) calc(var(--glow) * 100%), transparent), transparent 70%);
+      filter: blur(40px);
+    }
+    .window picture { display: block; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: var(--lift); background: var(--surface); }
 
     /* §2 How it works */
-    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; counter-reset: step; list-style: none; margin: 0; padding: 0; }
-    .steps li { counter-increment: step; }
-    .steps .placeholder { aspect-ratio: 4 / 3; margin-bottom: 1.25rem; }
-    .steps h3::before { content: counter(step); display: inline-grid; place-items: center; width: 1.625rem; height: 1.625rem; margin-right: .625rem; border-radius: 50%; background: var(--sage); color: var(--primary-ink); font-size: .8125rem; vertical-align: .1em; }
-    @media (prefers-color-scheme: light) { .steps h3::before { color: #fff; } }
-    .steps p { color: var(--soft); margin: .625rem 0 0; }
-    @media (max-width: 52rem) { .steps { grid-template-columns: 1fr; } }
+    .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(3rem, 7vw, 5.5rem); }
+    .step { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(2rem, 5vw, 4.5rem); align-items: center; }
+    .step .num { display: block; margin-bottom: 1rem; font: .8125rem/1 var(--mono); color: var(--sage-ink); }
+    .step h3 { font-size: clamp(1.5rem, 2.6vw, 1.875rem); letter-spacing: -0.03em; line-height: 1.15; }
+    .step p { margin: .875rem 0 0; color: var(--soft); font-size: 1.0625rem; max-width: 26rem; }
+    .step .pane { padding: .5rem; }
+    @media (max-width: 52rem) { .step { grid-template-columns: minmax(0, 1fr); } }
 
-    /* §3 Features */
-    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-    .feature { background: var(--page); padding: 1.75rem; }
-    .feature .icon { width: 2.25rem; height: 2.25rem; border-radius: 8px; border: 1px dashed var(--edge); margin-bottom: 1.125rem; }
-    .feature p { color: var(--soft); margin: .5rem 0 0; font-size: .9375rem; }
-    @media (max-width: 60rem) { .features { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 38rem) { .features { grid-template-columns: 1fr; } }
+    /* §3 Features: every picture is a piece of the app. */
+    .bento { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1rem; }
+    .tile { display: flex; flex-direction: column; }
+    .tile .text { padding: 1.5rem 1.5rem 1rem; }
+    .tile p { margin: .375rem 0 0; color: var(--soft); font-size: .9375rem; }
+    .tile picture { display: block; margin-top: auto; padding: 0 .75rem .75rem; }
+    .tile.peek picture { padding-right: 0; overflow: hidden; -webkit-mask-image: var(--fade); mask-image: var(--fade); }
+    .tile.peek img { width: max(100%, 30rem); max-width: none; }
+    .t-tutor picture { margin-block: auto; padding-block: .75rem 1.5rem; }
+    .t-map { grid-column: span 4; }
+    .t-notes { grid-column: span 2; grid-row: span 2; background: var(--card); }
+    .t-notes picture { margin-top: 0; padding: 0; }
+    .t-kinds, .t-tutor { grid-column: span 2; }
+    .t-sitting, .t-split { grid-column: span 3; }
+    @media (max-width: 60rem) {
+      .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .t-map, .t-sitting, .t-split { grid-column: span 2; }
+      .t-notes, .t-kinds, .t-tutor { grid-column: span 1; }
+    }
+    @media (max-width: 38rem) {
+      .bento { grid-template-columns: minmax(0, 1fr); }
+      .tile { grid-column: auto; grid-row: auto; }
+      /* On a phone a whole screenshot is too small to read: show its near side at a readable size and fade the rest. */
+      .shot picture, .t-sitting picture, .t-split picture { display: flex; overflow: hidden; -webkit-mask-image: var(--fade); mask-image: var(--fade); }
+      .shot img, .t-sitting img, .t-split img { flex: none; width: max(100%, 30rem); max-width: none; }
+      .t-split picture { padding-right: 0; }
+      .t-sitting picture { justify-content: flex-end; padding-left: 0; --fade: linear-gradient(to left, #000 68%, transparent 97%); }
+      pre .c { display: none; }
+    }
 
-    /* §4 and §5 split sections */
+    /* §4 and §5: words beside a picture */
     .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(2.5rem, 6vw, 5rem); align-items: center; }
+    .split.picture-first { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+    .split.words-first { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
     .split .section-head { margin-bottom: 0; }
-    .split .placeholder { aspect-ratio: 5 / 4; }
-    @media (max-width: 52rem) { .split { grid-template-columns: minmax(0, 1fr); } }
-    .list { list-style: none; padding: 0; margin: 1.75rem 0 0; display: grid; gap: .875rem; }
-    .list li { display: flex; gap: .75rem; color: var(--soft); }
-    .list li::before { content: ""; flex: none; width: .5rem; height: .5rem; margin-top: .6rem; border-radius: 50%; background: var(--sage); }
-    .list strong { color: var(--ink); font-weight: 600; }
-    .providers { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
-    .provider { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 1rem 1.125rem; }
-    .provider span { display: block; color: var(--faint); font-size: .8125rem; margin-top: .125rem; }
+    .split .pane { padding: .5rem; }
+    @media (max-width: 52rem) { .split, .split.picture-first, .split.words-first { grid-template-columns: minmax(0, 1fr); } .split .section-head { order: -1; } }
+    .list { list-style: none; padding: 0; margin: 2rem 0 0; display: grid; gap: 1rem; }
+    .list li { display: grid; grid-template-columns: auto 1fr; gap: .875rem; color: var(--soft); }
+    .list li::before { content: ""; width: .4375rem; height: .4375rem; margin-top: .65rem; border-radius: 50%; background: var(--sage); }
+    .list strong { color: var(--ink); font-weight: 500; }
+
+    pre { margin: 0; overflow-x: auto; padding: 1.25rem 1.5rem; font: .8125rem/1.9 var(--mono); color: var(--soft); }
+    pre .dim { color: var(--faint); }
+    pre .hi { color: var(--ink); }
+    pre .prompt { color: var(--sage-ink); user-select: none; }
 
     /* §6 Open source */
-    .oss { background: var(--surface); }
-    pre {
-      margin: 0; overflow-x: auto;
-      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-      padding: 1.25rem 1.5rem; font: .875rem/1.8 ui-monospace, monospace; color: var(--soft);
-    }
-    pre .prompt { color: var(--sage-ink); user-select: none; }
-    .oss .actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
-    .fineprint { color: var(--faint); font-size: .8125rem; margin-top: 1.25rem; }
+    .oss { border-block: 1px solid var(--line); background: var(--page); }
+    .oss .pane { background: var(--surface); }
+    .facts { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; margin: 1.75rem 0 0; padding: 0; }
+    .facts li { padding: .3rem .7rem; border: 1px solid var(--line); border-radius: 99px; color: var(--soft); font-size: .8125rem; }
+    .fineprint { margin: 1rem 0 0; color: var(--faint); font-size: .8125rem; }
 
     /* §7 Download */
-    .downloads { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-    .platform { border: 1px solid var(--line); background: var(--card); border-radius: var(--radius); padding: 1.75rem; display: flex; flex-direction: column; gap: .375rem; }
-    .platform p { margin: 0 0 1.25rem; color: var(--faint); font-size: .875rem; }
-    .platform .btn { margin-top: auto; justify-content: center; }
-    .platform .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
-    @media (max-width: 52rem) { .downloads { grid-template-columns: 1fr; } }
+    .download { text-align: center; }
+    .download .section-head { margin-inline: auto; }
+    .downloads { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; text-align: left; }
+    .platform { display: flex; flex-direction: column; padding: 1.5rem; }
+    .platform p { margin: .25rem 0 1.5rem; color: var(--faint); font-size: .875rem; }
+    .platform .btn { margin-top: auto; }
+    .platform .btn[aria-disabled="true"] { color: var(--faint); cursor: not-allowed; }
+    .platform .btn[aria-disabled="true"]:hover { border-color: var(--line); }
+    @media (max-width: 52rem) { .downloads { grid-template-columns: minmax(0, 1fr); } }
 
     footer { border-top: 1px solid var(--line); padding: 2.5rem 0; color: var(--faint); font-size: .875rem; }
     footer .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 2rem; }
@@ -214,14 +254,15 @@
     </symbol>
   </svg>
 
-  <header data-mock="§0 Header">
+  <header>
     <div class="wrap">
-      <a class="brand" href="/" aria-label="Jukpo home"><svg aria-hidden="true"><use href="#wordmark"/></svg></a>
+      <a class="brand" href="/" aria-label="Jukpo home"><svg aria-hidden="true" viewBox="0 0 254 100"><use href="#wordmark"/></svg></a>
       <nav aria-label="Main">
         <ul>
           <li><a href="#how">How it works</a></li>
           <li><a href="#features">Features</a></li>
           <li><a href="#models">Models</a></li>
+          <li><a href="#data">Your data</a></li>
           <li><a href="#open-source">Open source</a></li>
         </ul>
       </nav>
@@ -235,15 +276,20 @@
   <main id="main">
     <section class="hero" data-mock="§1 Hero">
       <div class="wrap">
-        <p class="eyebrow">Free and open source · MIT licence</p>
+        <p class="eyebrow">Free and open source</p>
         <h1>Learn anything,<br>at your pace.</h1>
-        <p class="lead">Tell Jukpo what you want to learn. It maps the topic into ideas, writes a short lesson for each, and asks you questions at the right times so it sticks.</p>
+        <p class="lead">Jukpo turns any topic into a map of ideas, writes a short lesson for each one, and brings back practice when it’s due, so what you learn stays learned.</p>
         <div class="actions">
           <a class="btn primary large" href="#download">Download for desktop</a>
           <a class="btn large" href="https://github.com/jukpodotcom/jukpo"><svg aria-hidden="true"><use href="#github"/></svg>View on GitHub</a>
         </div>
-        <p class="platforms">Linux · macOS · Windows. Mobile later.</p>
-        <div class="placeholder shot"><div><strong>App screenshot</strong>A Space’s page: its graph of areas and ideas, the sidebar, and an idea selected</div></div>
+        <p class="platforms">Linux · macOS · Windows</p>
+        <div class="window">
+          <picture>
+            <source srcset="/assets/screens/hero-paper.webp" media="(prefers-color-scheme: light)">
+            <img src="/assets/screens/hero-graphite.webp" width="1440" height="900" alt="Jukpo showing a Space on distributed systems: its areas and ideas with how each one stands, and a notebook beside them with a checklist, a formula and a code block.">
+          </picture>
+        </div>
       </div>
     </section>
 
@@ -254,20 +300,44 @@
           <h2>From curious to confident, one idea at a time.</h2>
         </div>
         <ol class="steps">
-          <li>
-            <div class="placeholder"><div><strong>Screenshot</strong>New space: a topic typed in, areas being drafted</div></div>
-            <h3>Start a Space</h3>
-            <p>Name any topic. Jukpo drafts its areas, the ideas in each and their key points, plus a big picture of how it fits together.</p>
+          <li class="step">
+            <div>
+              <span class="num">01</span>
+              <h3>Say what you want to learn</h3>
+              <p>A subject, a book or course, or something you want to be able to do. Jukpo names the Space and sketches its areas, then drafts the ideas in each one.</p>
+            </div>
+            <div class="pane shot">
+              <picture>
+                <source srcset="/assets/screens/new-space-paper.webp" media="(prefers-color-scheme: light)">
+                <img src="/assets/screens/new-space-graphite.webp" width="710" height="426" loading="lazy" alt="The New space page asks “What do you want to learn?”, with “how do vaccines actually train the immune system” typed in and examples below.">
+              </picture>
+            </div>
           </li>
-          <li>
-            <div class="placeholder"><div><strong>Screenshot</strong>A lesson card, with a highlight and a note beside it</div></div>
-            <h3>Read a short lesson</h3>
-            <p>Each idea gets a lesson in cards, written to scan and then read. Highlight, take notes, or ask the tutor to explain something more simply.</p>
+          <li class="step">
+            <div>
+              <span class="num">02</span>
+              <h3>Read a short lesson</h3>
+              <p>Every idea gets a lesson in cards, written to be scanned and then read. Highlight a line, write a note beside it, or ask the tutor to explain it more simply.</p>
+            </div>
+            <div class="pane shot">
+              <picture>
+                <source srcset="/assets/screens/lesson-paper.webp" media="(prefers-color-scheme: light)">
+                <img src="/assets/screens/lesson-graphite.webp" width="668" height="502" loading="lazy" alt="A lesson with a highlighted phrase and a note under it, and the tutor’s simpler explanation below.">
+              </picture>
+            </div>
           </li>
-          <li>
-            <div class="placeholder"><div><strong>Screenshot</strong>A practice question, answered, with feedback</div></div>
-            <h3>Practice until it sticks</h3>
-            <p>Answer questions written from the lesson. A daily sitting brings back what’s due, so what you learn comes back when you need it.</p>
+          <li class="step">
+            <div>
+              <span class="num">03</span>
+              <h3>Practice until it sticks</h3>
+              <p>Questions are written from the lesson you read, and a wrong answer comes with the reason. Start a sitting and Jukpo picks what to look at today.</p>
+            </div>
+            <div class="pane shot">
+              <picture>
+                <source srcset="/assets/screens/practice-paper.webp" media="(prefers-color-scheme: light)">
+                <img src="/assets/screens/practice-graphite.webp" width="660" height="432" loading="lazy" alt="A multiple-choice question answered wrongly: “Not quite”, a one-line reason, and the right answer.">
+              </picture>
+            </div>
           </li>
         </ol>
       </div>
@@ -279,44 +349,91 @@
           <p class="eyebrow">Features</p>
           <h2>Built for learning, not just reading.</h2>
         </div>
-        <div class="features">
-          <article class="feature"><div class="icon" aria-hidden="true"></div><h3>A map of every topic</h3><p>See a Space as a graph of its areas and ideas, and how each idea stands.</p></article>
-          <article class="feature"><div class="icon" aria-hidden="true"></div><h3>Everything due today</h3><p>Sittings choose what to look at today: new ideas to start and old ones to recall.</p></article>
-          <article class="feature"><div class="icon" aria-hidden="true"></div><h3>Many kinds of question</h3><p>Tap, sort, match, fill a gap, predict, explain it back, spot the flaw, write code.</p></article>
-          <article class="feature"><div class="icon" aria-hidden="true"></div><h3>Notes in Markdown</h3><p>Highlights and notes sit beside the lesson and are kept as plain Markdown files.</p></article>
-          <article class="feature"><div class="icon" aria-hidden="true"></div><h3>A tutor on hand</h3><p>Select any words in a lesson to ask about them or have them explained more simply.</p></article>
-          <article class="feature"><div class="icon" aria-hidden="true"></div><h3>Grows with you</h3><p>When an idea or area gets too big, Jukpo offers to split it. Nothing changes until you say yes.</p></article>
+        <div class="bento">
+          <article class="tile pane t-map">
+            <div class="text"><h3>A map of everything you’re learning</h3><p>Each Space is a graph of its areas and ideas. Home draws them all, with the bridges between subjects.</p></div>
+            <picture>
+              <source srcset="/assets/screens/map-paper.webp" media="(prefers-color-scheme: light)">
+              <img src="/assets/screens/map-graphite.webp" width="812" height="305" loading="lazy" alt="Home’s graph: clusters of ideas in each Space’s colour, with dotted bridges between Spaces.">
+            </picture>
+          </article>
+          <article class="tile pane t-notes">
+            <div class="text"><h3>Notes in Markdown</h3><p>A notebook for each Space and a note for each idea, with checklists, maths and code.</p></div>
+            <picture>
+              <source srcset="/assets/screens/notes-paper.webp" media="(prefers-color-scheme: light)">
+              <img src="/assets/screens/notes-graphite.webp" width="430" height="644" loading="lazy" alt="A Space notebook with a list of questions, a checklist, a quote, a formula and a line of TypeScript.">
+            </picture>
+          </article>
+          <article class="tile pane peek t-kinds">
+            <div class="text"><h3>Many kinds of question</h3><p>Choose, sort, match, order, fill a gap, predict, explain it back, spot the flaw, write code.</p></div>
+            <picture>
+              <source srcset="/assets/screens/kinds-paper.webp" media="(prefers-color-scheme: light)">
+              <img src="/assets/screens/kinds-graphite.webp" width="660" height="296" loading="lazy" alt="A question asking which of three numbered steps is wrong.">
+            </picture>
+          </article>
+          <article class="tile pane peek t-tutor">
+            <div class="text"><h3>A tutor on hand</h3><p>Select any words in a lesson to ask about them, or have them explained more simply.</p></div>
+            <picture>
+              <source srcset="/assets/screens/tutor-paper.webp" media="(prefers-color-scheme: light)">
+              <img src="/assets/screens/tutor-graphite.webp" width="667" height="132" loading="lazy" alt="The tutor’s box, “Ask anything about this idea”, with a plain-words answer under it.">
+            </picture>
+          </article>
+          <article class="tile pane t-sitting">
+            <div class="text"><h3>One button for today</h3><p>Start a sitting and Jukpo chooses: new ideas to begin, and old ones that are due to come back.</p></div>
+            <picture>
+              <source srcset="/assets/screens/sitting-paper.webp" media="(prefers-color-scheme: light)">
+              <img src="/assets/screens/sitting-graphite.webp" width="812" height="86" loading="lazy" alt="Home’s Start button, with a “Revisits only” switch beside it.">
+            </picture>
+          </article>
+          <article class="tile pane t-split">
+            <div class="text"><h3>Grows with you</h3><p>When an idea gets too big, Jukpo offers to split it. Nothing changes until you say yes.</p></div>
+            <picture>
+              <source srcset="/assets/screens/split-paper.webp" media="(prefers-color-scheme: light)">
+              <img src="/assets/screens/split-graphite.webp" width="656" height="84" loading="lazy" alt="An offer: “Bonding” has many key points. It may be two ideas. Look at it, or Not now.">
+            </picture>
+          </article>
         </div>
       </div>
     </section>
 
     <section id="models" data-mock="§4 Bring your own model">
-      <div class="wrap split">
+      <div class="wrap split picture-first">
+        <div class="pane shot">
+          <picture>
+            <source srcset="/assets/screens/models-paper.webp" media="(prefers-color-scheme: light)">
+            <img src="/assets/screens/models-graphite.webp" width="846" height="676" loading="lazy" alt="Settings › Model: providers Antigravity, Claude, Codex and OpenAI-compatible with a switch each, and a model chosen for Fast, Standard and Deep work.">
+          </picture>
+        </div>
         <div class="section-head">
           <p class="eyebrow">Bring your own model</p>
           <h2>Uses the AI you already have.</h2>
-          <p>Jukpo writes lessons, questions and feedback with a model you connect. Sign in with a tool you already use, or point it at any OpenAI-compatible server, including one on your own computer.</p>
-        </div>
-        <div class="providers">
-          <div class="provider"><strong>Claude Code</strong><span>Anthropic</span></div>
-          <div class="provider"><strong>Codex</strong><span>OpenAI</span></div>
-          <div class="provider"><strong>Antigravity</strong><span>Google</span></div>
-          <div class="provider"><strong>OpenAI-compatible</strong><span>Any server, local or hosted</span></div>
+          <ul class="list">
+            <li><span><strong>Sign in with a tool you use.</strong> Claude Code, Codex or Antigravity, through the command-line tool already on your computer.</span></li>
+            <li><span><strong>Or point it at a server.</strong> Any OpenAI-compatible one, hosted or running on your own machine.</span></li>
+            <li><span><strong>Choose which model does what.</strong> A small one for quick reads, your most capable for writing lessons.</span></li>
+          </ul>
         </div>
       </div>
     </section>
 
     <section id="data" data-mock="§5 Your data">
-      <div class="wrap split">
-        <div class="placeholder"><div><strong>Illustration</strong>The record folder: a Space’s logs and its Markdown notes</div></div>
+      <div class="wrap split words-first">
         <div class="section-head">
           <p class="eyebrow">Your record, your files</p>
-          <h2>Everything you learn stays in a folder you choose.</h2>
+          <h2>What you learn stays in a folder you choose.</h2>
           <ul class="list">
-            <li><span><strong>Plain files on your computer.</strong> Your progress is a log that is only ever added to; notes are Markdown.</span></li>
+            <li><span><strong>Plain files, no Jukpo account.</strong> Progress is a log that is only ever added to; lessons and notes are Markdown.</span></li>
             <li><span><strong>Sync it your way.</strong> Put the folder in Syncthing or another sync tool to learn on more than one computer.</span></li>
-            <li><span><strong>Nothing is lost by accident.</strong> Spaces are archived, not deleted, until you ask to delete one forever.</span></li>
+            <li><span><strong>Nothing is lost by accident.</strong> A Space is archived, not deleted, until you ask to delete it forever.</span></li>
           </ul>
+        </div>
+        <div class="pane">
+          <pre tabindex="0" aria-label="The layout of a Space in the record folder"><code><span class="hi">record/spaces/</span><span class="dim">&lt;space&gt;</span><span class="hi">/</span>
+├─ log/<span class="dim">&lt;device&gt;</span>/<span class="hi">2026-11.jsonl</span><span class="dim c">   # every change</span>
+├─ lessons/<span class="dim">&lt;idea&gt;</span>/<span class="hi">&lt;hash&gt;.md</span><span class="dim c">     # each lesson</span>
+└─ notes/
+   ├─ <span class="hi">space.md</span><span class="dim c">                  # the notebook</span>
+   └─ ideas/<span class="hi">&lt;idea&gt;.md</span><span class="dim c">           # a note per idea</span></code></pre>
         </div>
       </div>
     </section>
@@ -325,42 +442,49 @@
       <div class="wrap split">
         <div class="section-head">
           <p class="eyebrow">Open source</p>
-          <h2>MIT-licensed. Take it, change it, make it your own.</h2>
-          <p>Jukpo is Electron and React over a plain TypeScript core. Contributions are welcome; the contributing guide explains the layout and the rules.</p>
+          <h2>Take it, change it, make it your own.</h2>
+          <p>The code is MIT-licensed: Electron and React over a plain TypeScript core. The contributing guide has the layout, the rules and the commands.</p>
+          <ul class="facts" aria-label="At a glance">
+            <li>MIT licence</li>
+            <li>TypeScript</li>
+            <li>Electron + React</li>
+          </ul>
           <div class="actions">
             <a class="btn primary" href="https://github.com/jukpodotcom/jukpo"><svg aria-hidden="true"><use href="#github"/></svg>Star on GitHub</a>
             <a class="btn" href="https://github.com/jukpodotcom/jukpo/blob/main/CONTRIBUTING.md">Contributing guide</a>
           </div>
         </div>
         <div>
-          <pre aria-label="Run Jukpo from source"><code><span class="prompt">$ </span>git clone https://github.com/jukpodotcom/jukpo
-<span class="prompt">$ </span>cd jukpo
-<span class="prompt">$ </span>npm install
-<span class="prompt">$ </span>npm run dev</code></pre>
+          <div class="pane">
+            <pre tabindex="0" aria-label="Run Jukpo from source"><code><span class="prompt">$ </span><span class="hi">git clone https://github.com/jukpodotcom/jukpo</span>
+<span class="prompt">$ </span><span class="hi">cd jukpo</span>
+<span class="prompt">$ </span><span class="hi">npm install</span>
+<span class="prompt">$ </span><span class="hi">npm run dev</span></code></pre>
+          </div>
           <p class="fineprint">Needs Node 24 or newer. The Jukpo name, logo and icons are not covered by the MIT licence.</p>
         </div>
       </div>
     </section>
 
-    <section id="download" data-mock="§7 Download">
+    <section id="download" class="download" data-mock="§7 Download">
       <div class="wrap">
         <div class="section-head">
           <p class="eyebrow">Download</p>
           <h2>Get Jukpo for your desktop.</h2>
-          <p>Free, with no account. Mobile is planned.</p>
+          <p>Free. Mobile comes later.</p>
         </div>
         <div class="downloads">
-          <div class="platform"><h3>Linux</h3><p>.deb and AppImage</p><a class="btn" aria-disabled="true">Coming soon</a></div>
-          <div class="platform"><h3>macOS</h3><p>Apple silicon and Intel</p><a class="btn" aria-disabled="true">Coming soon</a></div>
-          <div class="platform"><h3>Windows</h3><p>Installer</p><a class="btn" aria-disabled="true">Coming soon</a></div>
+          <div class="platform pane"><h3>Linux</h3><p>.deb and AppImage</p><a class="btn" aria-disabled="true">Coming soon</a></div>
+          <div class="platform pane"><h3>macOS</h3><p>Apple silicon and Intel</p><a class="btn" aria-disabled="true">Coming soon</a></div>
+          <div class="platform pane"><h3>Windows</h3><p>Installer</p><a class="btn" aria-disabled="true">Coming soon</a></div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer data-mock="§8 Footer">
+  <footer>
     <div class="wrap">
-      <svg role="img" aria-label="Jukpo"><use href="#wordmark"/></svg>
+      <svg role="img" aria-label="Jukpo" viewBox="0 0 254 100"><use href="#wordmark"/></svg>
       <span>Learn anything, at your pace.</span>
       <ul>
         <li><a href="https://github.com/jukpodotcom/jukpo">GitHub</a></li>
